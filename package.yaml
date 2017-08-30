@@ -3,7 +3,9 @@ version: 0.0.0
 
 category: Distribution
 description: Salve provides semantic version numbers and constraints.
-extra-source-files: CHANGELOG.markdown
+extra-source-files:
+  - CHANGELOG.markdown
+  - README.markdown
 license-file: LICENSE.markdown
 license: MIT
 maintainer: Taylor Fausak
