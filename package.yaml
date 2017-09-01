@@ -6,6 +6,7 @@ description: Salve provides semantic version numbers and constraints.
 extra-source-files:
   - CHANGELOG.markdown
   - README.markdown
+github: tfausak/salve
 license-file: LICENSE.markdown
 license: MIT
 maintainer: Taylor Fausak
