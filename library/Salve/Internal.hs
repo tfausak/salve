@@ -225,9 +225,6 @@ constraintOr l r = ConstraintOr l r
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "1.2.3 - 2.3.4"
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
---
--- >>> renderConstraint <$> (constraintHyphen <$> parseVersion "1.2.3" <*> parseVersion "2.3.4")
--- Just ">=1.2.3 <=2.3.4"
 constraintHyphen :: Version -> Version -> Constraint
 constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
 
@@ -237,13 +234,6 @@ constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "~1.2.3"
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
---
--- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.0.0")
--- Just ">=1.0.0 <1.1.0"
--- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.2.0")
--- Just ">=1.2.0 <1.3.0"
--- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.2.3")
--- Just ">=1.2.3 <1.3.0"
 constraintTilde :: Version -> Constraint
 constraintTilde v = constraintAnd
   (constraintGE v)
@@ -256,13 +246,6 @@ constraintTilde v = constraintAnd
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "^1.2.3"
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
---
--- >>> renderConstraint <$> (constraintCaret <$> parseVersion "1.2.3")
--- Just ">=1.2.3 <2.0.0"
--- >>> renderConstraint <$> (constraintCaret <$> parseVersion "0.2.3")
--- Just ">=0.2.3 <0.3.0"
--- >>> renderConstraint <$> (constraintCaret <$> parseVersion "0.0.3")
--- Just ">=0.0.3 <0.0.4"
 constraintCaret :: Version -> Constraint
 constraintCaret v = constraintAnd
   (constraintGE v)
