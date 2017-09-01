@@ -231,9 +231,7 @@ constraintOr l r = ConstraintOr l r
 constraintHyphen :: Version -> Version -> Constraint
 constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
 
--- | Makes a new constraint that allows changes to the minor version number if
--- the patch version number is zero, otherwise allows changes to the patch
--- version number.
+-- | Makes a new constraint that allows changes to the patch version number.
 --
 -- >>> constraintTilde <$> parseVersion "1.2.3"
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
@@ -241,7 +239,7 @@ constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 --
 -- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.0.0")
--- Just ">=1.0.0 <2.0.0"
+-- Just ">=1.0.0 <1.1.0"
 -- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.2.0")
 -- Just ">=1.2.0 <1.3.0"
 -- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.2.3")
@@ -249,9 +247,7 @@ constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
 constraintTilde :: Version -> Constraint
 constraintTilde v = constraintAnd
   (constraintGE v)
-  (constraintLT (if versionMinor v == 0 && versionPatch v == 0
-    then makeVersion (versionMajor v + 1) 0 0 [] []
-    else makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []))
+  (constraintLT (makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []))
 
 -- | Makes a new constraint that allows changes that do not modify the
 -- left-most non-zero version number.
