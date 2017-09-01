@@ -229,13 +229,13 @@ parseConstraint s = parse constraintsP s
 -- Raises an exception if the parse fails.
 --
 -- >>> unsafeParseVersion "wrong"
--- *** Exception: invalid version: "wrong"
+-- *** Exception: unsafeParseVersion: invalid version: "wrong"
 -- ...
 --
 -- See 'parseVersion' for a safe version of this function.
 unsafeParseVersion :: String -> Version
 unsafeParseVersion s = case parseVersion s of
-  Nothing -> error ("invalid version: " ++ show s)
+  Nothing -> error ("unsafeParseVersion: invalid version: " ++ show s)
   Just v -> v
 
 -- | Parses a pre-release.
@@ -246,13 +246,13 @@ unsafeParseVersion s = case parseVersion s of
 -- Raises an exception if the parse fails.
 --
 -- >>> unsafeParsePreRelease "wrong!"
--- *** Exception: invalid pre-release: "wrong!"
+-- *** Exception: unsafeParsePreRelease: invalid pre-release: "wrong!"
 -- ...
 --
 -- See 'parsePreRelease' for a safe version of this function.
 unsafeParsePreRelease :: String -> PreRelease
 unsafeParsePreRelease s = case parsePreRelease s of
-  Nothing -> error ("invalid pre-release: " ++ show s)
+  Nothing -> error ("unsafeParsePreRelease: invalid pre-release: " ++ show s)
   Just p -> p
 
 -- | Parses a build.
@@ -263,13 +263,13 @@ unsafeParsePreRelease s = case parsePreRelease s of
 -- Raises an exception if the parse fails.
 --
 -- >>> unsafeParseBuild "wrong!"
--- Build "*** Exception: invalid build: "wrong!"
+-- Build "*** Exception: unsafeParseBuild: invalid build: "wrong!"
 -- ...
 --
 -- See 'parseBuild' for a safe version of this function.
 unsafeParseBuild :: String -> Build
 unsafeParseBuild s = case parseBuild s of
-  Nothing -> error ("invalid build: " ++ show s)
+  Nothing -> error ("unsafeParseBuild: invalid build: " ++ show s)
   Just b -> b
 
 -- | Parses a constraint.
@@ -280,13 +280,13 @@ unsafeParseBuild s = case parseBuild s of
 -- Raises an exception if the parse fails.
 --
 -- >>> unsafeParseConstraint "wrong"
--- *** Exception: invalid constraint: "wrong"
+-- *** Exception: unsafeParseConstraint: invalid constraint: "wrong"
 -- ...
 --
 -- See 'parseConstraint' for a safe version of this function.
 unsafeParseConstraint :: String -> Constraint
 unsafeParseConstraint s = case parseConstraint s of
-  Nothing -> error ("invalid constraint: " ++ show s)
+  Nothing -> error ("unsafeParseConstraint: invalid constraint: " ++ show s)
   Just c -> c
 
 -- | Renders a version.
