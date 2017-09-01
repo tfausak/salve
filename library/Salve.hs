@@ -32,6 +32,9 @@ PreRelease,
 Build,
 Constraint,
 
+-- * Constructors
+initialVersion,
+
 -- * Parsing
 parseVersion,
 parsePreRelease,

@@ -4,6 +4,7 @@
 module Salve.Internal where
 
 -- $setup
+-- >>> import Lens.Micro
 -- >>> import Lens.Micro.Extras
 
 -- * Public
@@ -129,6 +130,25 @@ data Constraint
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
+
+-- | The initial version number for development.
+--
+-- >>> initialVersion
+-- Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []}
+--
+-- This can be a useful alternative to 'parseVersion' if you want a total way
+-- to create a version.
+--
+-- >>> initialVersion & majorLens .~ 1 & minorLens .~ 2 & patchLens .~ 3
+-- Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}
+initialVersion :: Version
+initialVersion = Version
+  { versionMajor = 0
+  , versionMinor = 0
+  , versionPatch = 0
+  , versionPreReleases = []
+  , versionBuilds = []
+  }
 
 -- | Attempts to parse a version. This parser follows [SemVer's
 -- BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
