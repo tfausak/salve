@@ -35,6 +35,13 @@ Constraint,
 -- * Constructors
 makeVersion,
 initialVersion,
+constraintLT,
+constraintLE,
+constraintEQ,
+constraintGE,
+constraintGT,
+constraintAnd,
+constraintOr,
 
 -- * Parsing
 parseVersion,
