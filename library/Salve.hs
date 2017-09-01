@@ -28,6 +28,108 @@ module Salve (
 --
 -- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
 -- Just True
+--
+-- == __Examples__
+--
+-- === Versions
+--
+-- No leading zeros.
+--
+-- >>> parseVersion "01.0.0"
+-- Nothing
+-- >>> parseVersion "0.01.0"
+-- Nothing
+-- >>> parseVersion "0.0.01"
+-- Nothing
+--
+-- No negative numbers.
+--
+-- >>> parseVersion "-1.0.0"
+-- Nothing
+-- >>> parseVersion "0.-1.0"
+-- Nothing
+-- >>> parseVersion "0.0.-1"
+-- Nothing
+--
+-- No non-digits.
+--
+-- >>> parseVersion "a.0.0"
+-- Nothing
+-- >>> parseVersion "0.a.0"
+-- Nothing
+-- >>> parseVersion "0.0.a"
+-- Nothing
+--
+-- No partial version numbers.
+--
+-- >>> parseVersion "0.0"
+-- Nothing
+--
+-- No extra version numbers.
+--
+-- >>> parseVersion "0.0.0.0"
+-- Nothing
+--
+-- === Constraints
+--
+-- No partial version numbers.
+--
+-- >>> parseConstraint "1.2"
+-- Nothing
+--
+-- No wildcards.
+--
+-- >>> parseConstraint "1.2.x"
+-- Nothing
+-- >>> parseConstraint "1.2.X"
+-- Nothing
+-- >>> parseConstraint "1.2.*"
+-- Nothing
+--
+-- Round-tripping.
+--
+-- >>> renderConstraint <$> parseConstraint "<=1.2.3"
+-- Just "<=1.2.3"
+-- >>> renderConstraint <$> parseConstraint "<1.2.3"
+-- Just "<1.2.3"
+-- >>> renderConstraint <$> parseConstraint "=1.2.3"
+-- Just "1.2.3"
+-- >>> renderConstraint <$> parseConstraint ">=1.2.3"
+-- Just ">=1.2.3"
+-- >>> renderConstraint <$> parseConstraint ">1.2.3"
+-- Just ">1.2.3"
+-- >>> renderConstraint <$> parseConstraint ">1.2.3 <2.0.0"
+-- Just ">1.2.3 <2.0.0"
+-- >>> renderConstraint <$> parseConstraint "1.2.3 || >1.2.3"
+-- Just "1.2.3 || >1.2.3"
+--
+-- Implicit equals.
+--
+-- >>> renderConstraint <$> parseConstraint "1.2.3"
+-- Just "1.2.3"
+--
+-- Hyphens.
+--
+-- >>> renderConstraint <$> parseConstraint "1.2.3 - 2.3.4"
+-- Just ">=1.2.3 <=2.3.4"
+--
+-- Tildes.
+--
+-- >>> renderConstraint <$> parseConstraint "~1.2.3"
+-- Just ">=1.2.3 <1.3.0"
+-- >>> renderConstraint <$> parseConstraint "~1.2.0"
+-- Just ">=1.2.0 <1.3.0"
+-- >>> renderConstraint <$> parseConstraint "~1.0.0"
+-- Just ">=1.0.0 <1.1.0"
+--
+-- Carets.
+--
+-- >>> renderConstraint <$> parseConstraint "^1.2.3"
+-- Just ">=1.2.3 <2.0.0"
+-- >>> renderConstraint <$> parseConstraint "^0.2.3"
+-- Just ">=0.2.3 <0.3.0"
+-- >>> renderConstraint <$> parseConstraint "^0.0.3"
+-- Just ">=0.0.3 <0.0.4"
 
 -- * Types
 Version,
