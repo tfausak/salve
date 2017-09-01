@@ -44,6 +44,7 @@ constraintAnd,
 constraintOr,
 constraintHyphen,
 constraintTilde,
+constraintCaret,
 
 -- * Parsing
 parseVersion,

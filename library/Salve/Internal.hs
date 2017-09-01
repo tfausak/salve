@@ -253,6 +253,29 @@ constraintTilde v = constraintAnd
     then makeVersion (versionMajor v + 1) 0 0 [] []
     else makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []))
 
+-- | Makes a new constraint that allows changes that do not modify the
+-- left-most non-zero version number.
+--
+-- >>> constraintCaret <$> parseVersion "1.2.3"
+-- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- >>> parseConstraint "^1.2.3"
+-- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+--
+-- >>> renderConstraint <$> (constraintCaret <$> parseVersion "1.2.3")
+-- Just ">=1.2.3 <2.0.0"
+-- >>> renderConstraint <$> (constraintCaret <$> parseVersion "0.2.3")
+-- Just ">=0.2.3 <0.3.0"
+-- >>> renderConstraint <$> (constraintCaret <$> parseVersion "0.0.3")
+-- Just ">=0.0.3 <0.0.4"
+constraintCaret :: Version -> Constraint
+constraintCaret v = constraintAnd
+  (constraintGE v)
+  (constraintLT (if versionMajor v == 0
+    then if versionMinor v == 0
+      then makeVersion (versionMajor v) (versionMinor v) (versionPatch v + 1) [] []
+      else makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []
+    else makeVersion (versionMajor v + 1) 0 0 [] []))
+
 -- | Attempts to parse a version. This parser follows [SemVer's
 -- BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
 --
@@ -687,16 +710,7 @@ caretP :: Parser Constraint
 caretP = do
   _ <- charP '^'
   v <- versionP
-  let w = caretUpper v
-  pure (constraintAnd (constraintGE v) (constraintLT w))
-
-caretUpper :: Version -> Version
-caretUpper v =
-  if versionMinor v == 0
-  then bumpPatch v
-  else if versionMajor v == 0
-  then bumpMinor v
-  else bumpMajor v
+  pure (constraintCaret v)
 
 tildeP :: Parser Constraint
 tildeP = do
