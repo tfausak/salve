@@ -42,6 +42,7 @@ constraintGE,
 constraintGT,
 constraintAnd,
 constraintOr,
+constraintHyphen,
 
 -- * Parsing
 parseVersion,
