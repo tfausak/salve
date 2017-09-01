@@ -550,6 +550,8 @@ satisfies v c = case c of
 --
 -- >>> view majorLens <$> parseVersion "1.2.3-pre.4+build.5"
 -- Just 1
+-- >>> set majorLens 4 <$> parseVersion "1.2.3"
+-- Just (Version {versionMajor = 4, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 majorLens :: Functor f => (Word -> f Word) -> Version -> f Version
 majorLens f v = fmap
   (\ m -> v { versionMajor = m })
@@ -559,6 +561,8 @@ majorLens f v = fmap
 --
 -- >>> view minorLens <$> parseVersion "1.2.3-pre.4+build.5"
 -- Just 2
+-- >>> set minorLens 4 <$> parseVersion "1.2.3"
+-- Just (Version {versionMajor = 1, versionMinor = 4, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 minorLens :: Functor f => (Word -> f Word) -> Version -> f Version
 minorLens f v = fmap
   (\ n -> v { versionMinor = n })
@@ -568,6 +572,8 @@ minorLens f v = fmap
 --
 -- >>> view patchLens <$> parseVersion "1.2.3-pre.4+build.5"
 -- Just 3
+-- >>> set patchLens 4 <$> parseVersion "1.2.3"
+-- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 4, versionPreReleases = [], versionBuilds = []})
 patchLens :: Functor f => (Word -> f Word) -> Version -> f Version
 patchLens f v = fmap
   (\ p -> v { versionPatch = p })
@@ -577,6 +583,8 @@ patchLens f v = fmap
 --
 -- >>> view preReleasesLens <$> parseVersion "1.2.3-pre.4+build.5"
 -- Just [PreReleaseTextual "pre",PreReleaseNumeric 4]
+-- >>> set preReleasesLens [] <$> parseVersion "1.2.3-pre"
+-- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 preReleasesLens :: Functor f => ([PreRelease] -> f [PreRelease]) -> Version -> f Version
 preReleasesLens f v = fmap
   (\ ps -> v { versionPreReleases = ps })
@@ -586,6 +594,8 @@ preReleasesLens f v = fmap
 --
 -- >>> view buildsLens <$> parseVersion "1.2.3-pre.4+build.5"
 -- Just [Build "build",Build "5"]
+-- >>> set buildsLens [] <$> parseVersion "1.2.3+build"
+-- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 buildsLens :: Functor f => ([Build] -> f [Build]) -> Version -> f Version
 buildsLens f v = fmap
   (\ bs -> v { versionBuilds = bs })

@@ -8,6 +8,9 @@ module Salve (
 --
 -- >>> import Salve
 --
+-- This module provides lenses for modifying versions. If you want to modify
+-- versions, consider importing a lens library like "Lens.Micro".
+--
 -- The 'Version' data type is the core of this module. Use 'parseVersion' to
 -- make versions and 'renderVersion' to convert them into strings.
 --
