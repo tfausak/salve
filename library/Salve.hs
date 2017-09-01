@@ -33,6 +33,7 @@ Build,
 Constraint,
 
 -- * Constructors
+makeVersion,
 initialVersion,
 
 -- * Parsing

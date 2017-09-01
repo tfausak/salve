@@ -131,24 +131,28 @@ data Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
 
--- | The initial version number for development.
+-- | Makes a new version number.
 --
--- >>> initialVersion
+-- >>> makeVersion 0 0 0 [] []
 -- Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []}
 --
 -- This can be a useful alternative to 'parseVersion' if you want a total way
 -- to create a version.
---
--- >>> initialVersion & majorLens .~ 1 & minorLens .~ 2 & patchLens .~ 3
--- Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}
-initialVersion :: Version
-initialVersion = Version
-  { versionMajor = 0
-  , versionMinor = 0
-  , versionPatch = 0
-  , versionPreReleases = []
-  , versionBuilds = []
+makeVersion :: Word -> Word -> Word -> [PreRelease] -> [Build] -> Version
+makeVersion major minor patch preReleases builds = Version
+  { versionMajor = major
+  , versionMinor = minor
+  , versionPatch = patch
+  , versionPreReleases = preReleases
+  , versionBuilds = builds
   }
+
+-- | The initial version number for development.
+--
+-- >>> initialVersion
+-- Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []}
+initialVersion :: Version
+initialVersion = makeVersion 0 0 0 [] []
 
 -- | Attempts to parse a version. This parser follows [SemVer's
 -- BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
@@ -383,13 +387,7 @@ isStable v = not (isUnstable v)
 -- Consider using 'majorLens' if you want to arbitrarily change the major
 -- number, or if you don't want the other parts of the version to change.
 bumpMajor :: Version -> Version
-bumpMajor v = v
-  { versionMajor = versionMajor v + 1
-  , versionMinor = 0
-  , versionPatch = 0
-  , versionPreReleases = []
-  , versionBuilds = []
-  }
+bumpMajor v = makeVersion (versionMajor v + 1) 0 0 [] []
 
 -- | Increments the minor version number.
 --
@@ -409,12 +407,7 @@ bumpMajor v = v
 -- Consider using 'minorLens' if you want to arbitrarily change the minor
 -- number, or if you don't want the other parts of the version to change.
 bumpMinor :: Version -> Version
-bumpMinor v = v
-  { versionMinor = versionMinor v + 1
-  , versionPatch = 0
-  , versionPreReleases = []
-  , versionBuilds = []
-  }
+bumpMinor v = makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []
 
 -- | Increments the patch number.
 --
@@ -434,11 +427,8 @@ bumpMinor v = v
 -- Consider using 'patchLens' if you want to arbitrarily change the patch
 -- number, or if you don't want the other parts of the version to change.
 bumpPatch :: Version -> Version
-bumpPatch v = v
-  { versionPatch = versionPatch v + 1
-  , versionPreReleases = []
-  , versionBuilds = []
-  }
+bumpPatch v = makeVersion
+  (versionMajor v) (versionMinor v) (versionPatch v + 1) [] []
 
 -- | Returns 'True' if the version satisfies the constraint, 'False' otherwise.
 --
@@ -544,13 +534,7 @@ versionP = do
   patch <- numberP
   preReleases <- preReleasesP
   builds <- buildsP
-  pure Version
-    { versionMajor = major
-    , versionMinor = minor
-    , versionPatch = patch
-    , versionPreReleases = preReleases
-    , versionBuilds = builds
-    }
+  pure (makeVersion major minor patch preReleases builds)
 
 preReleasesP :: Parser [PreRelease]
 preReleasesP = optionP [] (do
