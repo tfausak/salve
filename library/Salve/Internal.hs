@@ -225,8 +225,33 @@ constraintOr l r = ConstraintOr l r
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "1.2.3 - 2.3.4"
 -- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
+--
+-- >>> renderConstraint <$> (constraintHyphen <$> parseVersion "1.2.3" <*> parseVersion "2.3.4")
+-- Just ">=1.2.3 <=2.3.4"
 constraintHyphen :: Version -> Version -> Constraint
 constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
+
+-- | Makes a new constraint that allows changes to the minor version number if
+-- the patch version number is zero, otherwise allows changes to the patch
+-- version number.
+--
+-- >>> constraintTilde <$> parseVersion "1.2.3"
+-- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- >>> parseConstraint "~1.2.3"
+-- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+--
+-- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.0.0")
+-- Just ">=1.0.0 <2.0.0"
+-- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.2.0")
+-- Just ">=1.2.0 <1.3.0"
+-- >>> renderConstraint <$> (constraintTilde <$> parseVersion "1.2.3")
+-- Just ">=1.2.3 <1.3.0"
+constraintTilde :: Version -> Constraint
+constraintTilde v = constraintAnd
+  (constraintGE v)
+  (constraintLT (if versionMinor v == 0 && versionPatch v == 0
+    then makeVersion (versionMajor v + 1) 0 0 [] []
+    else makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []))
 
 -- | Attempts to parse a version. This parser follows [SemVer's
 -- BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
@@ -677,11 +702,7 @@ tildeP :: Parser Constraint
 tildeP = do
   _ <- charP '~'
   v <- versionP
-  let w = tildeUpper v
-  pure (constraintAnd (constraintGE v) (constraintLT w))
-
-tildeUpper :: Version -> Version
-tildeUpper v = bumpMinor v
+  pure (constraintTilde v)
 
 primitiveP :: Parser Constraint
 primitiveP = do
