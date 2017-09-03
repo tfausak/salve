@@ -128,6 +128,7 @@ newtype Build = Build String deriving (Eq, Show)
 data Constraint
   = ConstraintOperator Operator Version
   | ConstraintHyphen Version Version
+  | ConstraintTilde Version
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
@@ -232,13 +233,11 @@ constraintHyphen v w = ConstraintHyphen v w
 -- | Makes a new constraint that allows changes to the patch version number.
 --
 -- >>> constraintTilde <$> parseVersion "1.2.3"
--- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "~1.2.3"
--- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintTilde :: Version -> Constraint
-constraintTilde v = constraintAnd
-  (constraintGE v)
-  (constraintLT (makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []))
+constraintTilde v = ConstraintTilde v
 
 -- | Makes a new constraint that allows changes that do not modify the
 -- left-most non-zero version number.
@@ -451,6 +450,7 @@ renderConstraint c = case c of
       OperatorGE -> '>' : '=' : s
       OperatorGT -> '>' : s
   ConstraintHyphen l r -> join ' ' [renderVersion l, "-", renderVersion r]
+  ConstraintTilde v -> '~' : renderVersion v
   ConstraintAnd l r -> join ' ' (map renderConstraint [l, r])
   ConstraintOr l r -> join ' ' [renderConstraint l, "||", renderConstraint r]
 
@@ -546,6 +546,7 @@ satisfies v c = case c of
     OperatorGE -> v >= w
     OperatorGT -> v > w
   ConstraintHyphen l r -> (l <= v) && (v <= r)
+  ConstraintTilde w -> (v >= w) && (v < makeVersion (versionMajor w) (versionMinor w + 1) 0 [] [])
   ConstraintAnd l r -> satisfies v l && satisfies v r
   ConstraintOr l r -> satisfies v l || satisfies v r
 

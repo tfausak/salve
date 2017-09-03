@@ -116,11 +116,11 @@ module Salve (
 -- Tildes.
 --
 -- >>> renderConstraint <$> parseConstraint "~1.2.3"
--- Just ">=1.2.3 <1.3.0"
+-- Just "~1.2.3"
 -- >>> renderConstraint <$> parseConstraint "~1.2.0"
--- Just ">=1.2.0 <1.3.0"
+-- Just "~1.2.0"
 -- >>> renderConstraint <$> parseConstraint "~1.0.0"
--- Just ">=1.0.0 <1.1.0"
+-- Just "~1.0.0"
 --
 -- Carets.
 --
@@ -138,7 +138,7 @@ module Salve (
 -- >>> renderConstraint <$> parseConstraint "1.2.3-p+b - 2.3.4-p+b"
 -- Just "1.2.3-p+b - 2.3.4-p+b"
 -- >>> renderConstraint <$> parseConstraint "~1.2.3-p+b"
--- Just ">=1.2.3-p+b <1.3.0"
+-- Just "~1.2.3-p+b"
 -- >>> renderConstraint <$> parseConstraint "^1.2.3-p+b"
 -- Just ">=1.2.3-p+b <2.0.0"
 
