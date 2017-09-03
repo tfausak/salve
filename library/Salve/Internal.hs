@@ -686,7 +686,9 @@ constraintsP = do
   pure (foldr1 constraintOr cs)
 
 constraintP :: Parser Constraint
-constraintP = choiceP hyphenatedP simplesP
+constraintP = do
+  cs <- sepBy1P spaceP simpleP
+  pure (foldr1 constraintAnd cs)
 
 hyphenatedP :: Parser Constraint
 hyphenatedP = do
@@ -695,13 +697,8 @@ hyphenatedP = do
   w <- versionP
   pure (constraintHyphen v w)
 
-simplesP :: Parser Constraint
-simplesP = do
-  cs <- sepBy1P spaceP simpleP
-  pure (foldr1 constraintAnd cs)
-
 simpleP :: Parser Constraint
-simpleP = choiceP caretP (choiceP tildeP primitiveP)
+simpleP = oneOfP [hyphenatedP, caretP, tildeP, primitiveP]
 
 caretP :: Parser Constraint
 caretP = do
