@@ -126,7 +126,7 @@ newtype Build = Build String deriving (Eq, Show)
 -- Use 'parseConstraint' to create constraints and 'satisfies' to see if a
 -- version number satisfies a constraint.
 data Constraint
-  = ConstraintCompare Operator Version
+  = ConstraintOperator Operator Version
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
@@ -157,83 +157,83 @@ initialVersion = makeVersion 0 0 0 [] []
 -- | Makes a new constraint that must be less than the version number.
 --
 -- >>> constraintLT <$> parseVersion "1.2.3"
--- Just (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "<1.2.3"
--- Just (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintLT :: Version -> Constraint
-constraintLT v = ConstraintCompare OperatorLT v
+constraintLT v = ConstraintOperator OperatorLT v
 
 -- | Makes a new constraint that must be less than or euqal to the version
 -- number.
 --
 -- >>> constraintLE <$> parseVersion "1.2.3"
--- Just (ConstraintCompare OperatorLE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorLE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "<=1.2.3"
--- Just (ConstraintCompare OperatorLE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorLE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintLE :: Version -> Constraint
-constraintLE v = ConstraintCompare OperatorLE v
+constraintLE v = ConstraintOperator OperatorLE v
 
 -- | Makes a new constraint that must be equal to the version number.
 --
 -- >>> constraintEQ <$> parseVersion "1.2.3"
--- Just (ConstraintCompare OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "=1.2.3"
--- Just (ConstraintCompare OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintEQ :: Version -> Constraint
-constraintEQ v = ConstraintCompare OperatorEQ v
+constraintEQ v = ConstraintOperator OperatorEQ v
 
 -- | Makes a new constraint that must be greater than or equal to the version
 -- number.
 --
 -- >>> constraintGE <$> parseVersion "1.2.3"
--- Just (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint ">=1.2.3"
--- Just (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintGE :: Version -> Constraint
-constraintGE v = ConstraintCompare OperatorGE v
+constraintGE v = ConstraintOperator OperatorGE v
 
 -- | Makes a new constraint that must be greater than the version number.
 --
 -- >>> constraintGT <$> parseVersion "1.2.3"
--- Just (ConstraintCompare OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint ">1.2.3"
--- Just (ConstraintCompare OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintGT :: Version -> Constraint
-constraintGT v = ConstraintCompare OperatorGT v
+constraintGT v = ConstraintOperator OperatorGT v
 
 -- | Makes a new constraint that must satisfy both constraints.
 --
 -- >>> constraintAnd <$> (constraintGE <$> parseVersion "1.2.3") <*> (constraintLT <$> parseVersion "2.0.0")
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint ">=1.2.3 <2.0.0"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 constraintAnd :: Constraint -> Constraint -> Constraint
 constraintAnd l r = ConstraintAnd l r
 
 -- | Makes a new constraint that must satisfy either constraint.
 --
 -- >>> constraintOr <$> (constraintEQ <$> parseVersion "1.2.3") <*> (constraintGT <$> parseVersion "1.2.3")
--- Just (ConstraintOr (ConstraintCompare OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintOr (ConstraintOperator OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "=1.2.3 || >1.2.3"
--- Just (ConstraintOr (ConstraintCompare OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintOr (ConstraintOperator OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})))
 constraintOr :: Constraint -> Constraint -> Constraint
 constraintOr l r = ConstraintOr l r
 
 -- | Makes a new constraint that must be between the versions, inclusive.
 --
 -- >>> constraintHyphen <$> parseVersion "1.2.3" <*> parseVersion "2.3.4"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "1.2.3 - 2.3.4"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
 constraintHyphen :: Version -> Version -> Constraint
 constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
 
 -- | Makes a new constraint that allows changes to the patch version number.
 --
 -- >>> constraintTilde <$> parseVersion "1.2.3"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "~1.2.3"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 3, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 constraintTilde :: Version -> Constraint
 constraintTilde v = constraintAnd
   (constraintGE v)
@@ -243,9 +243,9 @@ constraintTilde v = constraintAnd
 -- left-most non-zero version number.
 --
 -- >>> constraintCaret <$> parseVersion "1.2.3"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 -- >>> parseConstraint "^1.2.3"
--- Just (ConstraintAnd (ConstraintCompare OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintCompare OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 constraintCaret :: Version -> Constraint
 constraintCaret v = constraintAnd
   (constraintGE v)
@@ -317,7 +317,7 @@ parseBuild s = parse buildP s
 -- not supported. So you cannot use @1.2.x@ or @>1.2@ as version constraints.
 --
 -- >>> parseConstraint ">1.2.3"
--- Just (ConstraintCompare OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 --
 -- Returns 'Nothing' if the parse fails.
 --
@@ -380,7 +380,7 @@ unsafeParseBuild s = case parseBuild s of
 -- | Parses a constraint.
 --
 -- >>> unsafeParseConstraint ">1.2.3"
--- ConstraintCompare OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
+-- ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 --
 -- Raises an exception if the parse fails.
 --
@@ -441,7 +441,7 @@ renderBuild (Build b) = b
 -- Just "1.2.3"
 renderConstraint :: Constraint -> String
 renderConstraint c = case c of
-  ConstraintCompare o v ->
+  ConstraintOperator o v ->
     let s = renderVersion v
     in case o of
       OperatorLT -> '<' : s
@@ -537,12 +537,12 @@ bumpPatch v = makeVersion
 -- Just True
 satisfies :: Version -> Constraint -> Bool
 satisfies v c = case c of
-  ConstraintCompare o w -> case o of
-    OperatorLE -> v <= w
+  ConstraintOperator o w -> case o of
     OperatorLT -> v < w
+    OperatorLE -> v <= w
     OperatorEQ -> compare v w == EQ
-    OperatorGT -> v > w
     OperatorGE -> v >= w
+    OperatorGT -> v > w
   ConstraintAnd l r -> satisfies v l && satisfies v r
   ConstraintOr l r -> satisfies v l || satisfies v r
 
@@ -711,7 +711,7 @@ primitiveP :: Parser Constraint
 primitiveP = do
   o <- operatorP
   v <- versionP
-  pure (ConstraintCompare o v)
+  pure (ConstraintOperator o v)
 
 operatorP :: Parser Operator
 operatorP = oneOfP [leP, geP, ltP, gtP, eqP, pure OperatorEQ]
