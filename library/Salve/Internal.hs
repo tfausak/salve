@@ -129,6 +129,7 @@ data Constraint
   = ConstraintOperator Operator Version
   | ConstraintHyphen Version Version
   | ConstraintTilde Version
+  | ConstraintCaret Version
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
@@ -243,17 +244,11 @@ constraintTilde v = ConstraintTilde v
 -- left-most non-zero version number.
 --
 -- >>> constraintCaret <$> parseVersion "1.2.3"
--- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintCaret (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "^1.2.3"
--- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintCaret (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintCaret :: Version -> Constraint
-constraintCaret v = constraintAnd
-  (constraintGE v)
-  (constraintLT (if versionMajor v == 0
-    then if versionMinor v == 0
-      then makeVersion (versionMajor v) (versionMinor v) (versionPatch v + 1) [] []
-      else makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []
-    else makeVersion (versionMajor v + 1) 0 0 [] []))
+constraintCaret v = ConstraintCaret v
 
 -- | Attempts to parse a version. This parser follows [SemVer's
 -- BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
@@ -451,6 +446,7 @@ renderConstraint c = case c of
       OperatorGT -> '>' : s
   ConstraintHyphen l r -> join ' ' [renderVersion l, "-", renderVersion r]
   ConstraintTilde v -> '~' : renderVersion v
+  ConstraintCaret v -> '^' : renderVersion v
   ConstraintAnd l r -> join ' ' (map renderConstraint [l, r])
   ConstraintOr l r -> join ' ' [renderConstraint l, "||", renderConstraint r]
 
@@ -547,6 +543,14 @@ satisfies v c = case c of
     OperatorGT -> v > w
   ConstraintHyphen l r -> (l <= v) && (v <= r)
   ConstraintTilde w -> (v >= w) && (v < makeVersion (versionMajor w) (versionMinor w + 1) 0 [] [])
+  ConstraintCaret w ->
+    let u =
+          if versionMajor w == 0
+          then if versionMinor w == 0
+          then makeVersion (versionMajor w) (versionMinor w) (versionPatch w + 1) [] []
+          else makeVersion (versionMajor w) (versionMinor w + 1) 0 [] []
+          else makeVersion (versionMajor w + 1) 0 0 [] []
+    in (v >= w) && (v < u)
   ConstraintAnd l r -> satisfies v l && satisfies v r
   ConstraintOr l r -> satisfies v l || satisfies v r
 

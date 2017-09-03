@@ -125,11 +125,11 @@ module Salve (
 -- Carets.
 --
 -- >>> renderConstraint <$> parseConstraint "^1.2.3"
--- Just ">=1.2.3 <2.0.0"
+-- Just "^1.2.3"
 -- >>> renderConstraint <$> parseConstraint "^0.2.3"
--- Just ">=0.2.3 <0.3.0"
+-- Just "^0.2.3"
 -- >>> renderConstraint <$> parseConstraint "^0.0.3"
--- Just ">=0.0.3 <0.0.4"
+-- Just "^0.0.3"
 --
 -- Pre-releases and builds.
 --
@@ -140,7 +140,7 @@ module Salve (
 -- >>> renderConstraint <$> parseConstraint "~1.2.3-p+b"
 -- Just "~1.2.3-p+b"
 -- >>> renderConstraint <$> parseConstraint "^1.2.3-p+b"
--- Just ">=1.2.3-p+b <2.0.0"
+-- Just "^1.2.3-p+b"
 
 -- * Types
 Version,
