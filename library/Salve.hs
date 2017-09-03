@@ -88,10 +88,10 @@ module Salve (
 --
 -- Round-tripping.
 --
--- >>> renderConstraint <$> parseConstraint "<=1.2.3"
--- Just "<=1.2.3"
 -- >>> renderConstraint <$> parseConstraint "<1.2.3"
 -- Just "<1.2.3"
+-- >>> renderConstraint <$> parseConstraint "<=1.2.3"
+-- Just "<=1.2.3"
 -- >>> renderConstraint <$> parseConstraint "=1.2.3"
 -- Just "1.2.3"
 -- >>> renderConstraint <$> parseConstraint ">=1.2.3"
@@ -152,6 +152,126 @@ module Salve (
 -- Just "<1.2.0 || <=1.2.1 1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
 -- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 || =1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
 -- Just "<1.2.0 || <=1.2.1 || 1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
+--
+-- === Satisfying constraints
+--
+-- >>> let unsafeSatisfies version constraint = satisfies (unsafeParseVersion version) (unsafeParseConstraint constraint)
+--
+-- Less than.
+--
+-- >>> unsafeSatisfies "1.2.2" "<1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.3" "<1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.4" "<1.2.3"
+-- False
+--
+-- Less than or equal to.
+--
+-- >>> unsafeSatisfies "1.2.2" "<=1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.3" "<=1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.4" "<=1.2.3"
+-- False
+--
+-- Equal to.
+--
+-- >>> unsafeSatisfies "1.2.2" "=1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.3" "=1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.4" "=1.2.3"
+-- False
+--
+-- Greater than or equal to.
+--
+-- >>> unsafeSatisfies "1.2.2" ">=1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.3" ">=1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.4" ">=1.2.3"
+-- True
+--
+-- Greater than.
+--
+-- >>> unsafeSatisfies "1.2.2" ">1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.3" ">1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.4" ">1.2.3"
+-- True
+--
+-- And.
+--
+-- >>> unsafeSatisfies "1.2.3" ">1.2.3 <2.0.0"
+-- False
+-- >>> unsafeSatisfies "1.2.4" ">1.2.3 <2.0.0"
+-- True
+-- >>> unsafeSatisfies "1.3.0" ">1.2.3 <2.0.0"
+-- True
+-- >>> unsafeSatisfies "2.0.0" ">1.2.3 <2.0.0"
+-- False
+--
+-- Or.
+--
+-- >>> unsafeSatisfies "1.2.2" "1.2.3 || >1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.3" "1.2.3 || >1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.4" "1.2.3 || >1.2.3"
+-- True
+--
+-- Hyphen.
+--
+-- >>> unsafeSatisfies "1.2.2" "1.2.3 - 1.2.4"
+-- False
+-- >>> unsafeSatisfies "1.2.3" "1.2.3 - 1.2.4"
+-- True
+-- >>> unsafeSatisfies "1.2.4" "1.2.3 - 1.2.4"
+-- True
+-- >>> unsafeSatisfies "1.2.5" "1.2.3 - 1.2.4"
+-- False
+--
+-- Tilde.
+--
+-- >>> unsafeSatisfies "1.2.2" "~1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.3" "~1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.4" "~1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.3.0" "~1.2.3"
+-- False
+--
+-- Caret.
+--
+-- >>> unsafeSatisfies "0.0.2" "^0.0.3"
+-- False
+-- >>> unsafeSatisfies "0.0.3" "^0.0.3"
+-- True
+-- >>> unsafeSatisfies "0.0.4" "^0.0.3"
+-- False
+--
+-- >>> unsafeSatisfies "0.2.2" "^0.2.3"
+-- False
+-- >>> unsafeSatisfies "0.2.3" "^0.2.3"
+-- True
+-- >>> unsafeSatisfies "0.2.4" "^0.2.3"
+-- True
+-- >>> unsafeSatisfies "0.3.0" "^0.2.3"
+-- False
+--
+-- >>> unsafeSatisfies "1.2.2" "^1.2.3"
+-- False
+-- >>> unsafeSatisfies "1.2.3" "^1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.2.4" "^1.2.3"
+-- True
+-- >>> unsafeSatisfies "1.3.0" "^1.2.3"
+-- True
+-- >>> unsafeSatisfies "2.0.0" "^1.2.3"
+-- False
 
 -- * Types
 Version,
