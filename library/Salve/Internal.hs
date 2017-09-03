@@ -127,6 +127,7 @@ newtype Build = Build String deriving (Eq, Show)
 -- version number satisfies a constraint.
 data Constraint
   = ConstraintOperator Operator Version
+  | ConstraintHyphen Version Version
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
@@ -222,11 +223,11 @@ constraintOr l r = ConstraintOr l r
 -- | Makes a new constraint that must be between the versions, inclusive.
 --
 -- >>> constraintHyphen <$> parseVersion "1.2.3" <*> parseVersion "2.3.4"
--- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintHyphen (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}) (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "1.2.3 - 2.3.4"
--- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLE (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []})))
+-- Just (ConstraintHyphen (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}) (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []}))
 constraintHyphen :: Version -> Version -> Constraint
-constraintHyphen v w = constraintAnd (constraintGE v) (constraintLE w)
+constraintHyphen v w = ConstraintHyphen v w
 
 -- | Makes a new constraint that allows changes to the patch version number.
 --
@@ -449,6 +450,7 @@ renderConstraint c = case c of
       OperatorEQ -> s
       OperatorGE -> '>' : '=' : s
       OperatorGT -> '>' : s
+  ConstraintHyphen l r -> join ' ' [renderVersion l, "-", renderVersion r]
   ConstraintAnd l r -> join ' ' (map renderConstraint [l, r])
   ConstraintOr l r -> join ' ' [renderConstraint l, "||", renderConstraint r]
 
@@ -543,6 +545,7 @@ satisfies v c = case c of
     OperatorEQ -> compare v w == EQ
     OperatorGE -> v >= w
     OperatorGT -> v > w
+  ConstraintHyphen l r -> (l <= v) && (v <= r)
   ConstraintAnd l r -> satisfies v l && satisfies v r
   ConstraintOr l r -> satisfies v l || satisfies v r
 

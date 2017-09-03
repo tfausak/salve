@@ -111,7 +111,7 @@ module Salve (
 -- Hyphens.
 --
 -- >>> renderConstraint <$> parseConstraint "1.2.3 - 2.3.4"
--- Just ">=1.2.3 <=2.3.4"
+-- Just "1.2.3 - 2.3.4"
 --
 -- Tildes.
 --
@@ -136,7 +136,7 @@ module Salve (
 -- >>> renderConstraint <$> parseConstraint "1.2.3-p+b"
 -- Just "1.2.3-p+b"
 -- >>> renderConstraint <$> parseConstraint "1.2.3-p+b - 2.3.4-p+b"
--- Just ">=1.2.3-p+b <=2.3.4-p+b"
+-- Just "1.2.3-p+b - 2.3.4-p+b"
 -- >>> renderConstraint <$> parseConstraint "~1.2.3-p+b"
 -- Just ">=1.2.3-p+b <1.3.0"
 -- >>> renderConstraint <$> parseConstraint "^1.2.3-p+b"
