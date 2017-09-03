@@ -96,7 +96,6 @@ preReleasesLens,
 buildsLens,
 
 -- * Examples
--- | TODO
 
 -- ** Versions
 -- | Leading zeros are not allowed.
@@ -135,6 +134,17 @@ buildsLens,
 --
 -- >>> parseVersion "0.0.0.0"
 -- Nothing
+--
+-- Spaces are not allowed.
+--
+-- >>> parseVersion " 0.0.0"
+-- Nothing
+-- >>> parseVersion "0 .0.0"
+-- Nothing
+-- >>> parseVersion "0. 0.0"
+-- Nothing
+-- >>> parseVersion "0.0.0 "
+-- Nothing
 
 -- ** Constraints
 -- | Partial version numbers are not allowed.
@@ -162,6 +172,17 @@ buildsLens,
 -- >>> parseConstraint "1.2.3  2.3.4"
 -- Nothing
 -- >>> parseConstraint "1.2.3  ||  2.3.4"
+-- Nothing
+--
+-- Parentheses are not allowed. Note that combining two constraints with a
+-- space (and) has higher precedence than combining them with pipes (or). In
+-- other words, @"a b || c"@ parses as @"(a b) || c"@, not @"a (b || c)"@.
+--
+-- >>> parseConstraint "(1.2.3)"
+-- Nothing
+-- >>> parseConstraint "(1.2.3 || >1.2.3) <1.3.0"
+-- Nothing
+-- >>> parseConstraint "(>1.2.3 <1.3.0) || 1.2.3"
 -- Nothing
 --
 -- Most constraints can be round-tripped through parsing and rendering.
@@ -301,6 +322,17 @@ buildsLens,
 --     >>> "1.2.4" ? "1.2.3 || 1.2.4"
 --     True
 --     >>> "1.2.5" ? "1.2.3 || 1.2.4"
+--     False
+--
+-- -   And & or:
+--
+--     >>> "1.2.2" ? "1.2.2 || >1.2.3 <1.3.0"
+--     True
+--     >>> "1.2.3" ? "1.2.2 || >1.2.3 <1.3.0"
+--     False
+--     >>> "1.2.4" ? "1.2.2 || >1.2.3 <1.3.0"
+--     True
+--     >>> "1.3.0" ? "1.2.2 || >1.2.3 <1.3.0"
 --     False
 --
 -- -   Hyphen:
