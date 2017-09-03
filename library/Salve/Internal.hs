@@ -128,7 +128,6 @@ newtype Build = Build String deriving (Eq, Show)
 data Constraint
   = ConstraintOperator Operator Version
   | ConstraintHyphen Version Version
-  | ConstraintTilde Version
   | ConstraintCaret Version
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
@@ -234,11 +233,11 @@ constraintHyphen v w = ConstraintHyphen v w
 -- | Makes a new constraint that allows changes to the patch version number.
 --
 -- >>> constraintTilde <$> parseVersion "1.2.3"
--- Just (ConstraintTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 -- >>> parseConstraint "~1.2.3"
--- Just (ConstraintTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
+-- Just (ConstraintOperator OperatorTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintTilde :: Version -> Constraint
-constraintTilde v = ConstraintTilde v
+constraintTilde v = ConstraintOperator OperatorTilde v
 
 -- | Makes a new constraint that allows changes that do not modify the
 -- left-most non-zero version number.
@@ -444,8 +443,8 @@ renderConstraint c = case c of
       OperatorEQ -> s
       OperatorGE -> '>' : '=' : s
       OperatorGT -> '>' : s
+      OperatorTilde -> '~' : s
   ConstraintHyphen l r -> join ' ' [renderVersion l, "-", renderVersion r]
-  ConstraintTilde v -> '~' : renderVersion v
   ConstraintCaret v -> '^' : renderVersion v
   ConstraintAnd l r -> join ' ' (map renderConstraint [l, r])
   ConstraintOr l r -> join ' ' [renderConstraint l, "||", renderConstraint r]
@@ -541,8 +540,8 @@ satisfies v c = case c of
     OperatorEQ -> compare v w == EQ
     OperatorGE -> v >= w
     OperatorGT -> v > w
+    OperatorTilde -> (v >= w) && (v < makeVersion (versionMajor w) (versionMinor w + 1) 0 [] [])
   ConstraintHyphen l r -> (l <= v) && (v <= r)
-  ConstraintTilde w -> (v >= w) && (v < makeVersion (versionMajor w) (versionMinor w + 1) 0 [] [])
   ConstraintCaret w ->
     let u =
           if versionMajor w == 0
@@ -619,6 +618,7 @@ data Operator
   | OperatorEQ
   | OperatorGE
   | OperatorGT
+  | OperatorTilde
   deriving (Eq, Show)
 
 -- ** Parsing
