@@ -680,9 +680,7 @@ nonZeroP = do
 
 constraintsP :: Parser Constraint
 constraintsP = do
-  _ <- spacesP
   cs <- sepBy1P orP constraintP
-  _ <- spacesP
   pure (foldr1 constraintOr cs)
 
 constraintP :: Parser Constraint
@@ -751,9 +749,6 @@ hyphenP = stringP " - "
 
 orP :: Parser String
 orP = stringP " || "
-
-spacesP :: Parser String
-spacesP = manyP spaceP
 
 spaceP :: Parser Char
 spaceP = charP ' '

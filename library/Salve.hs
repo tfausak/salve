@@ -28,250 +28,6 @@ module Salve (
 --
 -- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
 -- Just True
---
--- == __Examples__
---
--- === Versions
---
--- No leading zeros.
---
--- >>> parseVersion "01.0.0"
--- Nothing
--- >>> parseVersion "0.01.0"
--- Nothing
--- >>> parseVersion "0.0.01"
--- Nothing
---
--- No negative numbers.
---
--- >>> parseVersion "-1.0.0"
--- Nothing
--- >>> parseVersion "0.-1.0"
--- Nothing
--- >>> parseVersion "0.0.-1"
--- Nothing
---
--- No non-digits.
---
--- >>> parseVersion "a.0.0"
--- Nothing
--- >>> parseVersion "0.a.0"
--- Nothing
--- >>> parseVersion "0.0.a"
--- Nothing
---
--- No partial version numbers.
---
--- >>> parseVersion "0.0"
--- Nothing
---
--- No extra version numbers.
---
--- >>> parseVersion "0.0.0.0"
--- Nothing
---
--- === Constraints
---
--- No partial version numbers.
---
--- >>> parseConstraint "1.2"
--- Nothing
---
--- No wildcards.
---
--- >>> parseConstraint "1.2.x"
--- Nothing
--- >>> parseConstraint "1.2.X"
--- Nothing
--- >>> parseConstraint "1.2.*"
--- Nothing
---
--- Round-tripping.
---
--- >>> renderConstraint <$> parseConstraint "<1.2.3"
--- Just "<1.2.3"
--- >>> renderConstraint <$> parseConstraint "<=1.2.3"
--- Just "<=1.2.3"
--- >>> renderConstraint <$> parseConstraint "=1.2.3"
--- Just "1.2.3"
--- >>> renderConstraint <$> parseConstraint ">=1.2.3"
--- Just ">=1.2.3"
--- >>> renderConstraint <$> parseConstraint ">1.2.3"
--- Just ">1.2.3"
--- >>> renderConstraint <$> parseConstraint ">1.2.3 <2.0.0"
--- Just ">1.2.3 <2.0.0"
--- >>> renderConstraint <$> parseConstraint "1.2.3 || >1.2.3"
--- Just "1.2.3 || >1.2.3"
---
--- Implicit equals.
---
--- >>> renderConstraint <$> parseConstraint "1.2.3"
--- Just "1.2.3"
---
--- Hyphens.
---
--- >>> renderConstraint <$> parseConstraint "1.2.3 - 2.3.4"
--- Just "1.2.3 - 2.3.4"
---
--- Tildes.
---
--- >>> renderConstraint <$> parseConstraint "~1.2.3"
--- Just "~1.2.3"
--- >>> renderConstraint <$> parseConstraint "~1.2.0"
--- Just "~1.2.0"
--- >>> renderConstraint <$> parseConstraint "~1.0.0"
--- Just "~1.0.0"
---
--- Carets.
---
--- >>> renderConstraint <$> parseConstraint "^1.2.3"
--- Just "^1.2.3"
--- >>> renderConstraint <$> parseConstraint "^0.2.3"
--- Just "^0.2.3"
--- >>> renderConstraint <$> parseConstraint "^0.0.3"
--- Just "^0.0.3"
---
--- Pre-releases and builds.
---
--- >>> renderConstraint <$> parseConstraint "1.2.3-p+b"
--- Just "1.2.3-p+b"
--- >>> renderConstraint <$> parseConstraint "1.2.3-p+b - 2.3.4-p+b"
--- Just "1.2.3-p+b - 2.3.4-p+b"
--- >>> renderConstraint <$> parseConstraint "~1.2.3-p+b"
--- Just "~1.2.3-p+b"
--- >>> renderConstraint <$> parseConstraint "^1.2.3-p+b"
--- Just "^1.2.3-p+b"
---
--- Kitchen sink.
---
--- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 =1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9"
--- Just "<1.2.0 <=1.2.1 1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9"
--- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 || =1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9"
--- Just "<1.2.0 <=1.2.1 || 1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9"
--- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 =1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
--- Just "<1.2.0 || <=1.2.1 1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
--- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 || =1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
--- Just "<1.2.0 || <=1.2.1 || 1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
---
--- === Satisfying constraints
---
--- >>> let unsafeSatisfies version constraint = satisfies (unsafeParseVersion version) (unsafeParseConstraint constraint)
---
--- Less than.
---
--- >>> unsafeSatisfies "1.2.2" "<1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.3" "<1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.4" "<1.2.3"
--- False
---
--- Less than or equal to.
---
--- >>> unsafeSatisfies "1.2.2" "<=1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.3" "<=1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.4" "<=1.2.3"
--- False
---
--- Equal to.
---
--- >>> unsafeSatisfies "1.2.2" "=1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.3" "=1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.4" "=1.2.3"
--- False
---
--- Greater than or equal to.
---
--- >>> unsafeSatisfies "1.2.2" ">=1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.3" ">=1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.4" ">=1.2.3"
--- True
---
--- Greater than.
---
--- >>> unsafeSatisfies "1.2.2" ">1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.3" ">1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.4" ">1.2.3"
--- True
---
--- And.
---
--- >>> unsafeSatisfies "1.2.3" ">1.2.3 <2.0.0"
--- False
--- >>> unsafeSatisfies "1.2.4" ">1.2.3 <2.0.0"
--- True
--- >>> unsafeSatisfies "1.3.0" ">1.2.3 <2.0.0"
--- True
--- >>> unsafeSatisfies "2.0.0" ">1.2.3 <2.0.0"
--- False
---
--- Or.
---
--- >>> unsafeSatisfies "1.2.2" "1.2.3 || >1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.3" "1.2.3 || >1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.4" "1.2.3 || >1.2.3"
--- True
---
--- Hyphen.
---
--- >>> unsafeSatisfies "1.2.2" "1.2.3 - 1.2.4"
--- False
--- >>> unsafeSatisfies "1.2.3" "1.2.3 - 1.2.4"
--- True
--- >>> unsafeSatisfies "1.2.4" "1.2.3 - 1.2.4"
--- True
--- >>> unsafeSatisfies "1.2.5" "1.2.3 - 1.2.4"
--- False
---
--- Tilde.
---
--- >>> unsafeSatisfies "1.2.2" "~1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.3" "~1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.4" "~1.2.3"
--- True
--- >>> unsafeSatisfies "1.3.0" "~1.2.3"
--- False
---
--- Caret.
---
--- >>> unsafeSatisfies "0.0.2" "^0.0.3"
--- False
--- >>> unsafeSatisfies "0.0.3" "^0.0.3"
--- True
--- >>> unsafeSatisfies "0.0.4" "^0.0.3"
--- False
---
--- >>> unsafeSatisfies "0.2.2" "^0.2.3"
--- False
--- >>> unsafeSatisfies "0.2.3" "^0.2.3"
--- True
--- >>> unsafeSatisfies "0.2.4" "^0.2.3"
--- True
--- >>> unsafeSatisfies "0.3.0" "^0.2.3"
--- False
---
--- >>> unsafeSatisfies "1.2.2" "^1.2.3"
--- False
--- >>> unsafeSatisfies "1.2.3" "^1.2.3"
--- True
--- >>> unsafeSatisfies "1.2.4" "^1.2.3"
--- True
--- >>> unsafeSatisfies "1.3.0" "^1.2.3"
--- True
--- >>> unsafeSatisfies "2.0.0" "^1.2.3"
--- False
 
 -- * Types
 Version,
@@ -338,6 +94,265 @@ minorLens,
 patchLens,
 preReleasesLens,
 buildsLens,
+
+-- * Examples
+-- | TODO
+
+-- ** Versions
+-- | Leading zeros are not allowed.
+--
+-- >>> parseVersion "01.0.0"
+-- Nothing
+-- >>> parseVersion "0.01.0"
+-- Nothing
+-- >>> parseVersion "0.0.01"
+-- Nothing
+--
+-- Negative numbers are not allowed.
+--
+-- >>> parseVersion "-1.0.0"
+-- Nothing
+-- >>> parseVersion "0.-1.0"
+-- Nothing
+-- >>> parseVersion "0.0.-1"
+-- Nothing
+--
+-- Non-digits are not allowed.
+--
+-- >>> parseVersion "a.0.0"
+-- Nothing
+-- >>> parseVersion "0.a.0"
+-- Nothing
+-- >>> parseVersion "0.0.a"
+-- Nothing
+--
+-- Partial version numbers are not allowed.
+--
+-- >>> parseVersion "0.0"
+-- Nothing
+--
+-- Extra version numbers are not allowed.
+--
+-- >>> parseVersion "0.0.0.0"
+-- Nothing
+
+-- ** Constraints
+-- | Partial version numbers are not allowed.
+--
+-- >>> parseConstraint "1.2"
+-- Nothing
+--
+-- Wildcards (also known as "x-ranges") are not allowed.
+--
+-- >>> parseConstraint "1.2.x"
+-- Nothing
+-- >>> parseConstraint "1.2.X"
+-- Nothing
+-- >>> parseConstraint "1.2.*"
+-- Nothing
+--
+-- Extra spaces are not allowed.
+--
+-- >>> parseConstraint " 1.2.3 "
+-- Nothing
+-- >>> parseConstraint "> 1.2.3"
+-- Nothing
+-- >>> parseConstraint "1.2.3  -  2.3.4"
+-- Nothing
+-- >>> parseConstraint "1.2.3  2.3.4"
+-- Nothing
+-- >>> parseConstraint "1.2.3  ||  2.3.4"
+-- Nothing
+--
+-- Most constraints can be round-tripped through parsing and rendering.
+--
+-- >>> renderConstraint <$> parseConstraint "<1.2.3"
+-- Just "<1.2.3"
+-- >>> renderConstraint <$> parseConstraint "<=1.2.3"
+-- Just "<=1.2.3"
+-- >>> renderConstraint <$> parseConstraint "1.2.3"
+-- Just "1.2.3"
+-- >>> renderConstraint <$> parseConstraint ">=1.2.3"
+-- Just ">=1.2.3"
+-- >>> renderConstraint <$> parseConstraint ">1.2.3"
+-- Just ">1.2.3"
+-- >>> renderConstraint <$> parseConstraint "1.2.3 - 2.3.4"
+-- Just "1.2.3 - 2.3.4"
+-- >>> renderConstraint <$> parseConstraint "~1.2.3"
+-- Just "~1.2.3"
+-- >>> renderConstraint <$> parseConstraint "^1.2.3"
+-- Just "^1.2.3"
+-- >>> renderConstraint <$> parseConstraint ">1.2.3 <2.0.0"
+-- Just ">1.2.3 <2.0.0"
+-- >>> renderConstraint <$> parseConstraint "1.2.3 || >1.2.3"
+-- Just "1.2.3 || >1.2.3"
+--
+-- Explicit equal signs do not get round-tripped.
+--
+-- >>> renderConstraint <$> parseConstraint "=1.2.3"
+-- Just "1.2.3"
+--
+-- Pre-releases and builds are allowed on any constraints.
+--
+-- >>> renderConstraint <$> parseConstraint "1.2.3-p+b"
+-- Just "1.2.3-p+b"
+-- >>> renderConstraint <$> parseConstraint ">1.2.3-p+b"
+-- Just ">1.2.3-p+b"
+-- >>> renderConstraint <$> parseConstraint "1.2.3-p+b - 2.3.4-p+b"
+-- Just "1.2.3-p+b - 2.3.4-p+b"
+-- >>> renderConstraint <$> parseConstraint "~1.2.3-p+b"
+-- Just "~1.2.3-p+b"
+-- >>> renderConstraint <$> parseConstraint "^1.2.3-p+b"
+-- Just "^1.2.3-p+b"
+--
+-- These examples show every type of constraint in a single expression.
+--
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 =1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9"
+-- Just "<1.2.0 <=1.2.1 1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 || =1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9"
+-- Just "<1.2.0 <=1.2.1 || 1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 =1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
+-- Just "<1.2.0 || <=1.2.1 1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 || =1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
+-- Just "<1.2.0 || <=1.2.1 || 1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
+
+-- ** Satisfying constraints
+-- | Although in general you should use 'satisfies', 'parseVersion', and
+-- 'parseConstraint', doing that here makes it hard to tell what the examples
+-- are doing. An operator makes things clearer.
+--
+-- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint "=1.2.3"
+-- Just True
+-- >>> let version ? constraint = satisfies (unsafeParseVersion version) (unsafeParseConstraint constraint)
+-- >>> "1.2.3" ? "=1.2.3"
+-- True
+--
+-- -   Less than:
+--
+--     >>> "1.2.2" ? "<1.2.3"
+--     True
+--     >>> "1.2.3" ? "<1.2.3"
+--     False
+--     >>> "1.2.4" ? "<1.2.3"
+--     False
+--     >>> "1.2.3-pre" ? "<1.2.3"
+--     True
+--
+-- -   Less than or equal to:
+--
+--     >>> "1.2.2" ? "<=1.2.3"
+--     True
+--     >>> "1.2.3" ? "<=1.2.3"
+--     True
+--     >>> "1.2.4" ? "<=1.2.3"
+--     False
+--
+-- -   Equal to:
+--
+--     >>> "1.2.2" ? "=1.2.3"
+--     False
+--     >>> "1.2.3" ? "=1.2.3"
+--     True
+--     >>> "1.2.4" ? "=1.2.3"
+--     False
+--     >>> "1.2.3-pre" ? "=1.2.3"
+--     False
+--     >>> "1.2.3+build" ? "=1.2.3"
+--     True
+--
+-- -   Greater than or equal to:
+--
+--     >>> "1.2.2" ? ">=1.2.3"
+--     False
+--     >>> "1.2.3" ? ">=1.2.3"
+--     True
+--     >>> "1.2.4" ? ">=1.2.3"
+--     True
+--
+-- -   Greater than:
+--
+--     >>> "1.2.2" ? ">1.2.3"
+--     False
+--     >>> "1.2.3" ? ">1.2.3"
+--     False
+--     >>> "1.2.4" ? ">1.2.3"
+--     True
+--     >>> "1.2.4-pre" ? ">1.2.3"
+--     True
+--
+--     >>> "1.2.4" ? ">1.2.3-pre"
+--     True
+--
+-- -   And:
+--
+--     >>> "1.2.3" ? ">1.2.3 <1.2.5"
+--     False
+--     >>> "1.2.4" ? ">1.2.3 <1.2.5"
+--     True
+--     >>> "1.2.5" ? ">1.2.3 <1.2.5"
+--     False
+--
+-- -   Or:
+--
+--     >>> "1.2.2" ? "1.2.3 || 1.2.4"
+--     False
+--     >>> "1.2.3" ? "1.2.3 || 1.2.4"
+--     True
+--     >>> "1.2.4" ? "1.2.3 || 1.2.4"
+--     True
+--     >>> "1.2.5" ? "1.2.3 || 1.2.4"
+--     False
+--
+-- -   Hyphen:
+--
+--     >>> "1.2.2" ? "1.2.3 - 1.2.4"
+--     False
+--     >>> "1.2.3" ? "1.2.3 - 1.2.4"
+--     True
+--     >>> "1.2.4" ? "1.2.3 - 1.2.4"
+--     True
+--     >>> "1.2.5" ? "1.2.3 - 1.2.4"
+--     False
+--
+-- -   Tilde:
+--
+--     >>> "1.2.2" ? "~1.2.3"
+--     False
+--     >>> "1.2.3" ? "~1.2.3"
+--     True
+--     >>> "1.2.4" ? "~1.2.3"
+--     True
+--     >>> "1.3.0" ? "~1.2.3"
+--     False
+--
+-- -   Caret:
+--
+--     >>> "1.2.2" ? "^1.2.3"
+--     False
+--     >>> "1.2.3" ? "^1.2.3"
+--     True
+--     >>> "1.2.4" ? "^1.2.3"
+--     True
+--     >>> "1.3.0" ? "^1.2.3"
+--     True
+--     >>> "2.0.0" ? "^1.2.3"
+--     False
+--
+--     >>> "0.2.2" ? "^0.2.3"
+--     False
+--     >>> "0.2.3" ? "^0.2.3"
+--     True
+--     >>> "0.2.4" ? "^0.2.3"
+--     True
+--     >>> "0.3.0" ? "^0.2.3"
+--     False
+--
+--     >>> "0.0.2" ? "^0.0.3"
+--     False
+--     >>> "0.0.3" ? "^0.0.3"
+--     True
+--     >>> "0.0.4" ? "^0.0.3"
+--     False
 ) where
 
 import Salve.Internal
