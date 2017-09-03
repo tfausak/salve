@@ -1,5 +1,5 @@
 name: salve
-version: 0.0.1
+version: 0.0.2
 
 category: Distribution
 description: Salve provides semantic version numbers and constraints.
