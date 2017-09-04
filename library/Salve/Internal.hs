@@ -3,6 +3,7 @@
 -- that thing exported from "Salve".
 module Salve.Internal where
 
+import qualified Control.Monad as Monad
 import qualified Data.Char as Char
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
@@ -635,9 +636,9 @@ constraintCaret v = ConstraintOperator OperatorCaret v
 versionP :: ReadP.ReadP Version
 versionP = do
   major <- numberP
-  _ <- ReadP.char '.'
+  Monad.void (ReadP.char '.')
   minor <- numberP
-  _ <- ReadP.char '.'
+  Monad.void (ReadP.char '.')
   patch <- numberP
   preReleases <- preReleasesP
   builds <- buildsP
@@ -645,7 +646,7 @@ versionP = do
 
 preReleasesP :: ReadP.ReadP [PreRelease]
 preReleasesP = ReadP.option [] (do
-  _ <- ReadP.char '-'
+  Monad.void (ReadP.char '-')
   ReadP.sepBy1 preReleaseP (ReadP.char '.'))
 
 preReleaseP :: ReadP.ReadP PreRelease
@@ -665,7 +666,7 @@ preReleaseStringP = do
 
 buildsP :: ReadP.ReadP [Build]
 buildsP = ReadP.option [] (do
-  _ <- ReadP.char '+'
+  Monad.void (ReadP.char '+')
   ReadP.sepBy1 buildP (ReadP.char '.'))
 
 buildP :: ReadP.ReadP Build
@@ -678,7 +679,7 @@ numberP = nonZeroP ReadP.<++ zeroP
 
 zeroP :: ReadP.ReadP Word
 zeroP = do
-  _ <- ReadP.char '0'
+  Monad.void (ReadP.char '0')
   pure 0
 
 nonZeroP :: ReadP.ReadP Word
@@ -704,7 +705,7 @@ constraintP = do
 hyphenatedP :: ReadP.ReadP Constraint
 hyphenatedP = do
   v <- versionP
-  _ <- hyphenP
+  hyphenP
   w <- versionP
   pure (constraintHyphen v w)
 
@@ -733,24 +734,20 @@ operatorP = ReadP.choice
 hyphenP :: ReadP.ReadP ()
 hyphenP = do
   spaces1P
-  _ <- ReadP.char '-'
+  Monad.void (ReadP.char '-')
   spaces1P
 
 orP :: ReadP.ReadP ()
 orP = do
   spaces1P
-  _ <- ReadP.string "||"
+  Monad.void (ReadP.string "||")
   spaces1P
 
 spaces1P :: ReadP.ReadP ()
-spaces1P = do
-  _ <- ReadP.munch1 (== ' ')
-  pure ()
+spaces1P = Monad.void (ReadP.munch1 (== ' '))
 
 spacesP :: ReadP.ReadP ()
-spacesP = do
-  _ <- ReadP.munch (== ' ')
-  pure ()
+spacesP = Monad.void (ReadP.munch (== ' '))
 
 -- *** Helpers
 
