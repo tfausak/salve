@@ -3,6 +3,13 @@
 -- that thing exported from "Salve".
 module Salve.Internal where
 
+import qualified Data.Char as Char
+import qualified Data.List as List
+import qualified Data.Maybe as Maybe
+import qualified Data.Ord as Ord
+import qualified Text.ParserCombinators.ReadP as ReadP
+import qualified Text.Read as Read
+
 -- $setup
 -- >>> import Lens.Micro
 -- >>> import Lens.Micro.Extras
@@ -62,9 +69,9 @@ data Version = Version
 -- Just False
 instance Ord Version where
   compare x y = mconcat
-    [ comparing versionMajor x y
-    , comparing versionMinor x y
-    , comparing versionPatch x y
+    [ Ord.comparing versionMajor x y
+    , Ord.comparing versionMinor x y
+    , Ord.comparing versionPatch x y
     , case both versionPreReleases (x, y) of
       ([], []) -> EQ
       ([], _) -> GT
@@ -444,9 +451,9 @@ renderConstraint c = case c of
       OperatorGT -> '>' : s
       OperatorTilde -> '~' : s
       OperatorCaret -> '^' : s
-  ConstraintHyphen l r -> join ' ' [renderVersion l, "-", renderVersion r]
-  ConstraintAnd l r -> join ' ' (map renderConstraint [l, r])
-  ConstraintOr l r -> join ' ' [renderConstraint l, "||", renderConstraint r]
+  ConstraintHyphen l r -> unwords [renderVersion l, "-", renderVersion r]
+  ConstraintAnd l r -> unwords (map renderConstraint [l, r])
+  ConstraintOr l r -> unwords [renderConstraint l, "||", renderConstraint r]
 
 -- | Returns 'True' if the major version number is zero, 'False' otherwise.
 --
@@ -623,264 +630,138 @@ data Operator
 
 -- ** Parsing
 
-versionP :: Parser Version
+versionP :: ReadP.ReadP Version
 versionP = do
   major <- numberP
-  _ <- charP '.'
+  _ <- ReadP.char '.'
   minor <- numberP
-  _ <- charP '.'
+  _ <- ReadP.char '.'
   patch <- numberP
   preReleases <- preReleasesP
   builds <- buildsP
   pure (makeVersion major minor patch preReleases builds)
 
-preReleasesP :: Parser [PreRelease]
-preReleasesP = optionP [] (do
-  _ <- charP '-'
-  sepBy1P (charP '.') preReleaseP)
+preReleasesP :: ReadP.ReadP [PreRelease]
+preReleasesP = ReadP.option [] (do
+  _ <- ReadP.char '-'
+  ReadP.sepBy1 preReleaseP (ReadP.char '.'))
 
-preReleaseP :: Parser PreRelease
-preReleaseP = choiceP preReleaseStringP preReleaseNumberP
+preReleaseP :: ReadP.ReadP PreRelease
+preReleaseP = preReleaseNumberP ReadP.<++ preReleaseStringP
 
-preReleaseNumberP :: Parser PreRelease
+preReleaseNumberP :: ReadP.ReadP PreRelease
 preReleaseNumberP = do
   n <- numberP
   pure (PreReleaseNumeric n)
 
-preReleaseStringP :: Parser PreRelease
+preReleaseStringP :: ReadP.ReadP PreRelease
 preReleaseStringP = do
-  s <- someP (satisfyP isIdentifier)
-  if all isAsciiDigit s
-    then failP
+  s <- ReadP.munch1 isIdentifier
+  if all Char.isDigit s
+    then ReadP.pfail
     else pure (PreReleaseTextual s)
 
-buildsP :: Parser [Build]
-buildsP = optionP [] (do
-  _ <- charP '+'
-  sepBy1P (charP '.') buildP)
+buildsP :: ReadP.ReadP [Build]
+buildsP = ReadP.option [] (do
+  _ <- ReadP.char '+'
+  ReadP.sepBy1 buildP (ReadP.char '.'))
 
-buildP :: Parser Build
+buildP :: ReadP.ReadP Build
 buildP = do
-  b <- someP (satisfyP isIdentifier)
+  b <- ReadP.munch1 isIdentifier
   pure (Build b)
 
-numberP :: Parser Word
-numberP = choiceP zeroP nonZeroP
+numberP :: ReadP.ReadP Word
+numberP = nonZeroP ReadP.<++ zeroP
 
-zeroP :: Parser Word
+zeroP :: ReadP.ReadP Word
 zeroP = do
-  _ <- charP '0'
+  _ <- ReadP.char '0'
   pure 0
 
-nonZeroP :: Parser Word
+nonZeroP :: ReadP.ReadP Word
 nonZeroP = do
-  x <- satisfyP isAsciiDigitNonZero
-  ys <- manyP (satisfyP isAsciiDigit)
-  pure (read (x : ys))
+  x <- ReadP.satisfy isAsciiDigitNonZero
+  ys <- ReadP.munch Char.isDigit
+  case Read.readMaybe (x : ys) of
+    Nothing -> ReadP.pfail
+    Just n -> pure n
 
-constraintsP :: Parser Constraint
+constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
-  cs <- sepBy1P orP constraintP
+  cs <- ReadP.sepBy1 constraintP orP
   pure (foldr1 constraintOr cs)
 
-constraintP :: Parser Constraint
+constraintP :: ReadP.ReadP Constraint
 constraintP = do
-  cs <- sepBy1P spaceP simpleP
+  cs <- ReadP.sepBy1 simpleP spaceP
   pure (foldr1 constraintAnd cs)
 
-hyphenatedP :: Parser Constraint
+hyphenatedP :: ReadP.ReadP Constraint
 hyphenatedP = do
   v <- versionP
   _ <- hyphenP
   w <- versionP
   pure (constraintHyphen v w)
 
-simpleP :: Parser Constraint
-simpleP = oneOfP [hyphenatedP, caretP, tildeP, primitiveP]
+simpleP :: ReadP.ReadP Constraint
+simpleP = hyphenatedP ReadP.<++ primitiveP
 
-caretP :: Parser Constraint
-caretP = do
-  _ <- charP '^'
-  v <- versionP
-  pure (constraintCaret v)
-
-tildeP :: Parser Constraint
-tildeP = do
-  _ <- charP '~'
-  v <- versionP
-  pure (constraintTilde v)
-
-primitiveP :: Parser Constraint
+primitiveP :: ReadP.ReadP Constraint
 primitiveP = do
   o <- operatorP
   v <- versionP
   pure (ConstraintOperator o v)
 
-operatorP :: Parser Operator
-operatorP = oneOfP [leP, geP, ltP, gtP, eqP, pure OperatorEQ]
+operatorP :: ReadP.ReadP Operator
+operatorP = ReadP.choice
+  [ ReadP.string "<=" *> pure OperatorLE
+  , ReadP.string ">=" *> pure OperatorGE
+  , ReadP.char '<' *> pure OperatorLT
+  , ReadP.char '>' *> pure OperatorGT
+  , ReadP.char '=' *> pure OperatorEQ
+  , ReadP.char '^' *> pure OperatorCaret
+  , ReadP.char '~' *> pure OperatorTilde
+  , pure OperatorEQ
+  ]
 
-leP :: Parser Operator
-leP = do
-  _ <- stringP "<="
-  pure OperatorLE
+hyphenP :: ReadP.ReadP String
+hyphenP = ReadP.string " - "
 
-geP :: Parser Operator
-geP = do
-  _ <- stringP ">="
-  pure OperatorGE
+orP :: ReadP.ReadP String
+orP = ReadP.string " || "
 
-ltP :: Parser Operator
-ltP = do
-  _ <- charP '<'
-  pure OperatorLT
-
-gtP :: Parser Operator
-gtP = do
-  _ <- charP '>'
-  pure OperatorGT
-
-eqP :: Parser Operator
-eqP = do
-  _ <- charP '='
-  pure OperatorEQ
-
-hyphenP :: Parser String
-hyphenP = stringP " - "
-
-orP :: Parser String
-orP = stringP " || "
-
-spaceP :: Parser Char
-spaceP = charP ' '
+spaceP :: ReadP.ReadP Char
+spaceP = ReadP.char ' '
 
 -- *** Helpers
 
-parse :: Parser a -> String -> Maybe a
-parse p s = safeHead (do
-  (x, "") <- runParser p s
-  pure x)
-
-newtype Parser a = Parser { runParser :: String -> [(a, String)] }
-
-instance Functor Parser where
-  fmap f p = Parser (\s -> do
-    (x, t) <- runParser p s
-    pure (f x, t))
-
-instance Applicative Parser where
-  pure x = Parser (\ s -> pure (x, s))
-
-  p <*> q = Parser (\ s -> do
-    (f, t) <- runParser p s
-    (x, u) <- runParser q t
-    pure (f x, u))
-
-instance Monad Parser where
-  fail x = Parser (\ _ -> fail x)
-
-  p >>= f = Parser (\ s -> do
-    (x, t) <- runParser p s
-    runParser (f x) t)
-
-charP :: Char -> Parser Char
-charP c = satisfyP (\ d -> d == c)
-
-choiceP :: Parser a -> Parser a -> Parser a
-choiceP p q = Parser (\ s -> case runParser p s of
-  [] -> runParser q s
-  xs -> xs)
-
-failP :: Parser a
-failP = fail undefined
-
-getP :: Parser Char
-getP = Parser (\ s -> case s of
-  "" -> []
-  c : t -> pure (c, t))
-
-manyP :: Parser a -> Parser [a]
-manyP p = choiceP (someP p) (pure [])
-
-oneOfP :: [Parser a] -> Parser a
-oneOfP ps = foldr choiceP failP ps
-
-optionP :: a -> Parser a -> Parser a
-optionP x p = choiceP p (pure x)
-
-satisfyP :: (Char -> Bool) -> Parser Char
-satisfyP f = do
-  c <- getP
-  if f c then pure c else failP
-
-sepByP :: Parser b -> Parser a -> Parser [a]
-sepByP q p = choiceP (sepBy1P q p) (pure [])
-
-sepBy1P :: Parser b -> Parser a -> Parser [a]
-sepBy1P q p = do
-  x <- p
-  xs <- optionP [] (do
-    _ <- q
-    sepBy1P q p)
-  pure (x : xs)
-
-someP :: Parser a -> Parser [a]
-someP p = do
-  x <- p
-  xs <- manyP p
-  pure (x : xs)
-
-stringP :: String -> Parser String
-stringP s = case s of
-  "" -> pure s
-  c : t -> do
-    _ <- charP c
-    _ <- stringP t
-    pure s
+parse :: ReadP.ReadP a -> String -> Maybe a
+parse p s =
+  let p' = ReadP.readP_to_S p
+  in Maybe.listToMaybe (do
+    (x, "") <- p' s
+    pure x)
 
 -- ** Rendering
 
 renderPreReleases :: [PreRelease] -> String
 renderPreReleases ps = if null ps
   then ""
-  else '-' : join '.' (map renderPreRelease ps)
+  else '-' : List.intercalate "." (map renderPreRelease ps)
 
 renderBuilds :: [Build] -> String
 renderBuilds bs = if null bs
   then ""
-  else '+' : join '.' (map renderBuild bs)
+  else '+' : List.intercalate "." (map renderBuild bs)
 
 -- ** Helpers
 
 both :: (a -> b) -> (a, a) -> (b, b)
 both f (x, y) = (f x, f y)
 
-comparing :: Ord b => (a -> b) -> a -> a -> Ordering
-comparing f x y = compare (f x) (f y)
-
-isAsciiAlpha :: Char -> Bool
-isAsciiAlpha c = (isAsciiAlphaUpper c) || (isAsciiAlphaLower c)
-
-isAsciiAlphaLower :: Char -> Bool
-isAsciiAlphaLower c = ('a' <= c) && (c <= 'z')
-
-isAsciiAlphaUpper :: Char -> Bool
-isAsciiAlphaUpper c = ('A' <= c) && (c <= 'Z')
-
-isAsciiDigit :: Char -> Bool
-isAsciiDigit c = ('0' <= c) && (c <= '9')
-
 isAsciiDigitNonZero :: Char -> Bool
-isAsciiDigitNonZero c = isAsciiDigit c && (c /= '0')
+isAsciiDigitNonZero c = Char.isDigit c && (c /= '0')
 
 isIdentifier :: Char -> Bool
-isIdentifier c = (c == '-') || isAsciiDigit c || isAsciiAlpha c
-
-join :: Char -> [String] -> String
-join c ss = case ss of
-  [] -> ""
-  s : ts -> mconcat (s : map (\ t -> c : t) ts)
-
-safeHead :: [a] -> Maybe a
-safeHead xs = case xs of
-  [] -> Nothing
-  x : _ -> Just x
+isIdentifier c = (Char.isAscii c && Char.isAlphaNum c) || (c == '-')
