@@ -86,6 +86,9 @@ preReleasesLens,
 buildsLens,
 
 -- * Examples
+-- | These examples are provided to showcase functionality and explain weird
+-- behavior. If something isn't clear, please open a pull request adding an
+-- example!
 
 -- ** Versions
 -- | Leading zeros are not allowed.
