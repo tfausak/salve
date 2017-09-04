@@ -152,6 +152,11 @@ buildsLens,
 -- >>> renderConstraint <$> parseConstraint "1.2.*"
 -- Just "1.2.x"
 --
+-- An optional equals sign can be included with wildcard constraints.
+--
+-- >>> renderConstraint <$> parseConstraint "=1.2.x"
+-- Just "1.2.x"
+--
 -- Wildcards can be combined with other constraints.
 --
 -- >>> renderConstraint <$> parseConstraint "1.2.x 2.3.4"
@@ -184,8 +189,6 @@ buildsLens,
 -- >>> parseConstraint "<1.2.x"
 -- Nothing
 -- >>> parseConstraint "<=1.2.x"
--- Nothing
--- >>> parseConstraint "=1.2.x"
 -- Nothing
 -- >>> parseConstraint ">=1.2.x"
 -- Nothing

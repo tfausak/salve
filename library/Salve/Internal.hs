@@ -729,6 +729,7 @@ simpleP = ReadP.choice [hyphenatedP, wildcardConstraintP, primitiveP]
 
 wildcardConstraintP :: ReadP.ReadP Constraint
 wildcardConstraintP = do
+  ReadP.optional (ReadP.char '=')
   w <- wildcardP
   pure (ConstraintWildcard w)
 
