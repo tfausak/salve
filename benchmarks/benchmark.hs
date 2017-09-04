@@ -21,6 +21,7 @@ deriving instance DeepSeq.NFData Salve.Constraint
 deriving instance DeepSeq.NFData Salve.Operator
 deriving instance DeepSeq.NFData Salve.PreRelease
 deriving instance DeepSeq.NFData Salve.Version
+deriving instance DeepSeq.NFData Salve.Wildcard
 deriving instance DeepSeq.NFData SemVerRange.PrereleaseTag
 deriving instance DeepSeq.NFData SemVerRange.PrereleaseTags
 deriving instance DeepSeq.NFData SemVerRange.SemVer
@@ -30,6 +31,7 @@ deriving instance Ghc.Generic Salve.Constraint
 deriving instance Ghc.Generic Salve.Operator
 deriving instance Ghc.Generic Salve.PreRelease
 deriving instance Ghc.Generic Salve.Version
+deriving instance Ghc.Generic Salve.Wildcard
 deriving instance Ghc.Generic SemVerRange.SemVerRange
 
 main :: IO ()

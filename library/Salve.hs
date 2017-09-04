@@ -142,13 +142,62 @@ buildsLens,
 -- >>> parseConstraint "1.2"
 -- Nothing
 --
--- Wildcards (also known as "x-ranges") are not allowed.
+-- Wildcards (also known as "x-ranges") are allowed. The exact character used
+-- for the wildcard is not round-tripped.
 --
--- >>> parseConstraint "1.2.x"
+-- >>> renderConstraint <$> parseConstraint "1.2.x"
+-- Just "1.2.x"
+-- >>> renderConstraint <$> parseConstraint "1.2.X"
+-- Just "1.2.x"
+-- >>> renderConstraint <$> parseConstraint "1.2.*"
+-- Just "1.2.x"
+--
+-- Wildcards can be combined with other constraints.
+--
+-- >>> renderConstraint <$> parseConstraint "1.2.x 2.3.4"
+-- Just "1.2.x 2.3.4"
+-- >>> renderConstraint <$> parseConstraint "1.2.x || 2.3.4"
+-- Just "1.2.x || 2.3.4"
+--
+-- Wildcards are allowed at any position.
+--
+-- >>> renderConstraint <$> parseConstraint "1.2.x"
+-- Just "1.2.x"
+-- >>> renderConstraint <$> parseConstraint "1.x.x"
+-- Just "1.x.x"
+-- >>> renderConstraint <$> parseConstraint "x.x.x"
+-- Just "x.x.x"
+--
+-- Non-wildcards cannot come after wildcards.
+--
+-- >>> parseConstraint "1.x.3"
 -- Nothing
--- >>> parseConstraint "1.2.X"
+-- >>> parseConstraint "x.2.3"
 -- Nothing
--- >>> parseConstraint "1.2.*"
+-- >>> parseConstraint "x.x.3"
+-- Nothing
+-- >>> parseConstraint "x.2.x"
+-- Nothing
+--
+-- Wildcards cannot be used with other operators.
+--
+-- >>> parseConstraint "<1.2.x"
+-- Nothing
+-- >>> parseConstraint "<=1.2.x"
+-- Nothing
+-- >>> parseConstraint "=1.2.x"
+-- Nothing
+-- >>> parseConstraint ">=1.2.x"
+-- Nothing
+-- >>> parseConstraint ">1.2.x"
+-- Nothing
+-- >>> parseConstraint "~1.2.x"
+-- Nothing
+-- >>> parseConstraint "^1.2.x"
+-- Nothing
+-- >>> parseConstraint "1.2.x - 2.3.4"
+-- Nothing
+-- >>> parseConstraint "1.2.3 - 2.3.x"
 -- Nothing
 --
 -- Spaces are allowed in most places. Extra spaces are not round-tripped.
@@ -203,7 +252,7 @@ buildsLens,
 -- >>> renderConstraint <$> parseConstraint "=1.2.3"
 -- Just "1.2.3"
 --
--- Pre-releases and builds are allowed on any constraints.
+-- Pre-releases and builds are allowed on any constraints except wildcards.
 --
 -- >>> renderConstraint <$> parseConstraint "1.2.3-p+b"
 -- Just "1.2.3-p+b"
@@ -216,16 +265,19 @@ buildsLens,
 -- >>> renderConstraint <$> parseConstraint "^1.2.3-p+b"
 -- Just "^1.2.3-p+b"
 --
+-- >>> parseConstraint "1.2.x-p+b"
+-- Nothing
+--
 -- These examples show every type of constraint in a single expression.
 --
--- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 =1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9"
--- Just "<1.2.0 <=1.2.1 1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9"
--- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 || =1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9"
--- Just "<1.2.0 <=1.2.1 || 1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9"
--- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 =1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
--- Just "<1.2.0 || <=1.2.1 1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9"
--- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 || =1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
--- Just "<1.2.0 || <=1.2.1 || 1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 =1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9 1.2.x"
+-- Just "<1.2.0 <=1.2.1 1.2.2 >=1.2.3 >1.2.4 1.2.5 1.2.6 - 1.2.7 ~1.2.8 ^1.2.9 1.2.x"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 <=1.2.1 || =1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9 1.2.x"
+-- Just "<1.2.0 <=1.2.1 || 1.2.2 >=1.2.3 || >1.2.4 1.2.5 || 1.2.6 - 1.2.7 ~1.2.8 || ^1.2.9 1.2.x"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 =1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9 || 1.2.x"
+-- Just "<1.2.0 || <=1.2.1 1.2.2 || >=1.2.3 >1.2.4 || 1.2.5 1.2.6 - 1.2.7 || ~1.2.8 ^1.2.9 || 1.2.x"
+-- >>> renderConstraint <$> parseConstraint "<1.2.0 || <=1.2.1 || =1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9 || 1.2.x"
+-- Just "<1.2.0 || <=1.2.1 || 1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9 || 1.2.x"
 
 -- ** Satisfying constraints
 -- | Although in general you should use 'satisfies', 'parseVersion', and
@@ -375,6 +427,31 @@ buildsLens,
 --     True
 --     >>> "0.0.4" ? "^0.0.3"
 --     False
+--
+-- -   Wildcard:
+--
+--     >>> "1.1.0" ? "1.2.x"
+--     False
+--     >>> "1.2.3" ? "1.2.x"
+--     True
+--     >>> "1.3.0" ? "1.2.x"
+--     False
+--
+--     >>> "0.1.0" ? "1.x.x"
+--     False
+--     >>> "1.0.0" ? "1.x.x"
+--     True
+--     >>> "1.2.3" ? "1.x.x"
+--     True
+--     >>> "2.0.0" ? "1.x.x"
+--     False
+--
+--     >>> "0.0.0" ? "x.x.x"
+--     True
+--     >>> "1.2.3" ? "x.x.x"
+--     True
+--     >>> "2.0.0" ? "x.x.x"
+--     True
 ) where
 
 import Salve.Internal

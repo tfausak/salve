@@ -136,6 +136,7 @@ newtype Build = Build String deriving (Eq, Show)
 data Constraint
   = ConstraintOperator Operator Version
   | ConstraintHyphen Version Version
+  | ConstraintWildcard Wildcard
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
   deriving (Eq, Show)
@@ -360,6 +361,10 @@ renderConstraint c = case c of
       OperatorTilde -> '~' : s
       OperatorCaret -> '^' : s
   ConstraintHyphen l r -> unwords [renderVersion l, "-", renderVersion r]
+  ConstraintWildcard w -> case w of
+    WildcardMajor -> "x.x.x"
+    WildcardMinor m -> show m ++ ".x.x"
+    WildcardPatch m n -> List.intercalate "." [show m, show n, "x"]
   ConstraintAnd l r -> unwords (map renderConstraint [l, r])
   ConstraintOr l r -> unwords [renderConstraint l, "||", renderConstraint r]
 
@@ -464,6 +469,10 @@ satisfies v c = case c of
             else makeVersion (versionMajor w + 1) 0 0 [] []
       in (v >= w) && (v < u)
   ConstraintHyphen l r -> (l <= v) && (v <= r)
+  ConstraintWildcard w -> case w of
+    WildcardMajor -> True
+    WildcardMinor m -> (makeVersion m 0 0 [] [] <= v) && (v < makeVersion (m + 1) 0 0 [] [])
+    WildcardPatch m n -> (makeVersion m n 0 [] [] <= v) && (v < makeVersion m (n + 1) 0 [] [])
   ConstraintAnd l r -> satisfies v l && satisfies v r
   ConstraintOr l r -> satisfies v l || satisfies v r
 
@@ -534,6 +543,12 @@ data Operator
   | OperatorGT
   | OperatorTilde
   | OperatorCaret
+  deriving (Eq, Show)
+
+data Wildcard
+  = WildcardMajor
+  | WildcardMinor Word
+  | WildcardPatch Word Word
   deriving (Eq, Show)
 
 -- ** Constructors
@@ -710,7 +725,42 @@ hyphenatedP = do
   pure (constraintHyphen v w)
 
 simpleP :: ReadP.ReadP Constraint
-simpleP = hyphenatedP ReadP.<++ primitiveP
+simpleP = ReadP.choice [hyphenatedP, wildcardConstraintP, primitiveP]
+
+wildcardConstraintP :: ReadP.ReadP Constraint
+wildcardConstraintP = do
+  w <- wildcardP
+  pure (ConstraintWildcard w)
+
+wildcardP :: ReadP.ReadP Wildcard
+wildcardP = ReadP.choice [wildcardPatchP, wildcardMinorP, wildcardMajorP]
+
+wildcardPatchP :: ReadP.ReadP Wildcard
+wildcardPatchP = do
+  m <- numberP
+  Monad.void (ReadP.char '.')
+  n <- numberP
+  Monad.void (ReadP.char '.')
+  Monad.void (ReadP.satisfy isWildcard)
+  pure (WildcardPatch m n)
+
+wildcardMinorP :: ReadP.ReadP Wildcard
+wildcardMinorP = do
+  m <- numberP
+  Monad.void (ReadP.char '.')
+  Monad.void (ReadP.satisfy isWildcard)
+  Monad.void (ReadP.char '.')
+  Monad.void (ReadP.satisfy isWildcard)
+  pure (WildcardMinor m)
+
+wildcardMajorP :: ReadP.ReadP Wildcard
+wildcardMajorP = do
+  Monad.void (ReadP.satisfy isWildcard)
+  Monad.void (ReadP.char '.')
+  Monad.void (ReadP.satisfy isWildcard)
+  Monad.void (ReadP.char '.')
+  Monad.void (ReadP.satisfy isWildcard)
+  pure WildcardMajor
 
 primitiveP :: ReadP.ReadP Constraint
 primitiveP = do
@@ -780,3 +830,6 @@ isAsciiDigitNonZero c = Char.isDigit c && (c /= '0')
 
 isIdentifier :: Char -> Bool
 isIdentifier c = (Char.isAscii c && Char.isAlphaNum c) || (c == '-')
+
+isWildcard :: Char -> Bool
+isWildcard c = (c == 'x') || (c == '*') || (c == 'X')
