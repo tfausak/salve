@@ -151,18 +151,18 @@ buildsLens,
 -- >>> parseConstraint "1.2.*"
 -- Nothing
 --
--- Extra spaces are not allowed.
+-- Spaces are allowed in most places. Extra spaces are not round-tripped.
 --
--- >>> parseConstraint " 1.2.3 "
--- Nothing
--- >>> parseConstraint "> 1.2.3"
--- Nothing
--- >>> parseConstraint "1.2.3  -  2.3.4"
--- Nothing
--- >>> parseConstraint "1.2.3  2.3.4"
--- Nothing
--- >>> parseConstraint "1.2.3  ||  2.3.4"
--- Nothing
+-- >>> renderConstraint <$> parseConstraint " 1.2.3 "
+-- Just "1.2.3"
+-- >>> renderConstraint <$> parseConstraint "> 1.2.3"
+-- Just ">1.2.3"
+-- >>> renderConstraint <$> parseConstraint "1.2.3  -  2.3.4"
+-- Just "1.2.3 - 2.3.4"
+-- >>> renderConstraint <$> parseConstraint "1.2.3  2.3.4"
+-- Just "1.2.3 2.3.4"
+-- >>> renderConstraint <$> parseConstraint "1.2.3  ||  2.3.4"
+-- Just "1.2.3 || 2.3.4"
 --
 -- Parentheses are not allowed. Note that combining two constraints with a
 -- space (and) has higher precedence than combining them with pipes (or). In

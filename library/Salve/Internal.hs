@@ -691,12 +691,14 @@ nonZeroP = do
 
 constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
+  spacesP
   cs <- ReadP.sepBy1 constraintP orP
+  spacesP
   pure (foldr1 constraintOr cs)
 
 constraintP :: ReadP.ReadP Constraint
 constraintP = do
-  cs <- ReadP.sepBy1 simpleP spaceP
+  cs <- ReadP.sepBy1 simpleP spaces1P
   pure (foldr1 constraintAnd cs)
 
 hyphenatedP :: ReadP.ReadP Constraint
@@ -712,6 +714,7 @@ simpleP = hyphenatedP ReadP.<++ primitiveP
 primitiveP :: ReadP.ReadP Constraint
 primitiveP = do
   o <- operatorP
+  spacesP
   v <- versionP
   pure (ConstraintOperator o v)
 
@@ -727,14 +730,27 @@ operatorP = ReadP.choice
   , pure OperatorEQ
   ]
 
-hyphenP :: ReadP.ReadP String
-hyphenP = ReadP.string " - "
+hyphenP :: ReadP.ReadP ()
+hyphenP = do
+  spaces1P
+  _ <- ReadP.char '-'
+  spaces1P
 
-orP :: ReadP.ReadP String
-orP = ReadP.string " || "
+orP :: ReadP.ReadP ()
+orP = do
+  spaces1P
+  _ <- ReadP.string "||"
+  spaces1P
 
-spaceP :: ReadP.ReadP Char
-spaceP = ReadP.char ' '
+spaces1P :: ReadP.ReadP ()
+spaces1P = do
+  _ <- ReadP.munch1 (== ' ')
+  pure ()
+
+spacesP :: ReadP.ReadP ()
+spacesP = do
+  _ <- ReadP.munch (== ' ')
+  pure ()
 
 -- *** Helpers
 
