@@ -2,7 +2,7 @@ name: salve
 version: 0.0.4
 
 category: Distribution
-description: Salve provides semantic version numbers and constraints.
+description: Salve provides semantic version (SemVer) numbers and constraints (ranges).
 extra-source-files:
   - CHANGELOG.markdown
   - README.markdown

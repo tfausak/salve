@@ -29,6 +29,63 @@ module Salve (
 -- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
 -- Just True
 
+-- * Rationale
+-- | There are already a few modules that provide version numbers. Why do we
+-- need another one? Let's take a look at the options.
+--
+-- -   <https://www.stackage.org/haddock/lts-9.3/base-4.9.1.0/Data-Version.html Data.Version> from the @base@ package:
+--
+--     -   Exposes constructors, which allows creating versions that cannot be
+--         parsed.
+--     -   Allows any number of components, from zero to inifinity.
+--     -   Deprecated tags on versions.
+--     -   Does not support build metadata on versions.
+--     -   Does not support constraints.
+--
+-- -   <https://www.stackage.org/haddock/lts-9.3/Cabal-1.24.2.0/Distribution-Version.html Distribution.Version> from the @Cabal@ package:
+--
+--     -   Has the same problems as Data.Version because it re-uses that
+--         version type.
+--     -   Depends on the @array@, @binary@, @bytestring@, @containers@,
+--         @deepseq@, @directory@, @filepath@, @pretty@, @process@, @time@, and
+--         @unix@ packages.
+--
+-- -   <https://www.stackage.org/haddock/lts-9.3/semver-0.3.3.1/Data-SemVer.html Data.SemVer> from the @semver@ package:
+--
+--     -   Depends on the @attoparsec@, @deepseq@, and @text@ packages.
+--     -   Does not support version constraints.
+--
+-- -   <https://hackage.haskell.org/package/semver-range-0.2.2/docs/Data-SemVer.html Data.SemVer> from the @semver-range@ package:
+--
+--     -   Depends on the @classy-prelude@, @parsec@, @text@, and
+--         @unordered-containers@ packages.
+--     -   Module name collides with the @semver@ package.
+--     -   Supports constraints, but does not provide a way to render them.
+--
+-- -   <https://www.stackage.org/haddock/lts-9.3/versions-3.1.1/Data-Versions.html Data.Versions> from the @versions@ package:
+--
+--     -   Depends on the @deepseq@, @hashable@, @megaparsec@, and @text@
+--         packages.
+--     -   Intentially allows weird versions.
+--     -   Does not support constraints.
+--
+-- By comparison, Salve:
+--
+-- -   Does not expose constructors. Any version you create can be rendered and
+--     parsed without issue.
+-- -   Requires exactly three components. You won't have to wonder if version
+--     @1.2.0@ is greater than @1.2@.
+-- -   Allows pre-release identifiers on versions. Go ahead and release version
+--     @1.0.0-alpha@ for early adopters.
+-- -   Allows build metadata on versions. Show when a release was made with
+--     versions like @1.0.0+2001-02-03@.
+-- -   Supports version constraints. Just like versions, rendering and parsing
+--     constraints is no problem.
+-- -   Only depends on the @base@ package. You can use all the functionality
+--     without installing any other packages.
+-- -   Has a unique module name. You won't have to use the @PackageImports@
+--     extension simply to deal with version numbers.
+
 -- * Types
 Version,
 PreRelease,
