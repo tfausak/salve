@@ -449,10 +449,10 @@ bumpPatch v = makeVersion
 
 -- | Returns 'True' if the version satisfies the constraint, 'False' otherwise.
 --
--- >>> satisfiesConstraint <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
+-- >>> satisfiesConstraint <$> parseConstraint ">1.2.0" <*> parseVersion "1.2.3"
 -- Just True
-satisfiesConstraint :: Version -> Constraint -> Bool
-satisfiesConstraint v c = case c of
+satisfiesConstraint :: Constraint -> Version -> Bool
+satisfiesConstraint c v = case c of
   ConstraintOperator o w -> case o of
     OperatorLT -> v < w
     OperatorLE -> v <= w
@@ -473,8 +473,8 @@ satisfiesConstraint v c = case c of
     WildcardMajor -> True
     WildcardMinor m -> (makeVersion m 0 0 [] [] <= v) && (v < makeVersion (m + 1) 0 0 [] [])
     WildcardPatch m n -> (makeVersion m n 0 [] [] <= v) && (v < makeVersion m (n + 1) 0 [] [])
-  ConstraintAnd l r -> satisfiesConstraint v l && satisfiesConstraint v r
-  ConstraintOr l r -> satisfiesConstraint v l || satisfiesConstraint v r
+  ConstraintAnd l r -> satisfiesConstraint l v && satisfiesConstraint r v
+  ConstraintOr l r -> satisfiesConstraint l v || satisfiesConstraint r v
 
 -- | Focuses on the major version number.
 --

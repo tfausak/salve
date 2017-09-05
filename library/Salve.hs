@@ -27,7 +27,7 @@ module Salve (
 -- Use 'satisfiesConstraint' to see if a version satisfiesConstraint a
 -- constraint.
 --
--- >>> satisfiesConstraint <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
+-- >>> satisfiesConstraint <$> parseConstraint ">1.2.0" <*> parseVersion "1.2.3"
 -- Just True
 
 -- * Rationale
@@ -353,9 +353,9 @@ buildsLens,
 -- and 'parseConstraint', doing that here makes it hard to tell what the
 -- examples are doing. An operator makes things clearer.
 --
--- >>> satisfiesConstraint <$> parseVersion "1.2.3" <*> parseConstraint "=1.2.3"
+-- >>> satisfiesConstraint <$> parseConstraint "=1.2.3" <*> parseVersion "1.2.3"
 -- Just True
--- >>> let version ? constraint = satisfiesConstraint (unsafeParseVersion version) (unsafeParseConstraint constraint)
+-- >>> let version ? constraint = satisfiesConstraint (unsafeParseConstraint constraint) (unsafeParseVersion version)
 -- >>> "1.2.3" ? "=1.2.3"
 -- True
 --
