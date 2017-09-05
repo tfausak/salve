@@ -24,16 +24,18 @@ module Salve (
 -- >>> renderConstraint <$> parseConstraint ">1.2.0"
 -- Just ">1.2.0"
 --
--- Use 'satisfies' to see if a version satisfies a constraint.
+-- Use 'satisfiesConstraint' to see if a version satisfiesConstraint a
+-- constraint.
 --
--- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
+-- >>> satisfiesConstraint <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
 -- Just True
 
 -- * Rationale
 -- | There are already a few modules that provide version numbers. Why do we
 -- need another one? Let's take a look at the options.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/base-4.9.1.0/Data-Version.html Data.Version> from the @base@ package:
+-- -   <https://www.stackage.org/haddock/lts-9.3/base-4.9.1.0/Data-Version.html Data.Version>
+--     from the @base@ package:
 --
 --     -   Exposes constructors, which allows creating versions that cannot be
 --         parsed.
@@ -42,7 +44,8 @@ module Salve (
 --     -   Does not support build metadata on versions.
 --     -   Does not support constraints.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/Cabal-1.24.2.0/Distribution-Version.html Distribution.Version> from the @Cabal@ package:
+-- -   <https://www.stackage.org/haddock/lts-9.3/Cabal-1.24.2.0/Distribution-Version.html Distribution.Version>
+--     from the @Cabal@ package:
 --
 --     -   Has the same problems as Data.Version because it re-uses that
 --         version type.
@@ -50,19 +53,22 @@ module Salve (
 --         @deepseq@, @directory@, @filepath@, @pretty@, @process@, @time@, and
 --         @unix@ packages.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/semver-0.3.3.1/Data-SemVer.html Data.SemVer> from the @semver@ package:
+-- -   <https://www.stackage.org/haddock/lts-9.3/semver-0.3.3.1/Data-SemVer.html Data.SemVer>
+--     from the @semver@ package:
 --
 --     -   Depends on the @attoparsec@, @deepseq@, and @text@ packages.
 --     -   Does not support version constraints.
 --
--- -   <https://hackage.haskell.org/package/semver-range-0.2.2/docs/Data-SemVer.html Data.SemVer> from the @semver-range@ package:
+-- -   <https://hackage.haskell.org/package/semver-range-0.2.2/docs/Data-SemVer.html Data.SemVer>
+--     from the @semver-range@ package:
 --
 --     -   Depends on the @classy-prelude@, @parsec@, @text@, and
 --         @unordered-containers@ packages.
 --     -   Module name collides with the @semver@ package.
 --     -   Supports constraints, but does not provide a way to render them.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/versions-3.1.1/Data-Versions.html Data.Versions> from the @versions@ package:
+-- -   <https://www.stackage.org/haddock/lts-9.3/versions-3.1.1/Data-Versions.html Data.Versions>
+--     from the @versions@ package:
 --
 --     -   Depends on the @deepseq@, @hashable@, @megaparsec@, and @text@
 --         packages.
@@ -125,7 +131,7 @@ isStable,
 bumpMajor,
 bumpMinor,
 bumpPatch,
-satisfies,
+satisfiesConstraint,
 
 -- * Lenses
 -- | These lenses can be used to access and modify specific parts of a
@@ -343,13 +349,13 @@ buildsLens,
 -- Just "<1.2.0 || <=1.2.1 || 1.2.2 || >=1.2.3 || >1.2.4 || 1.2.5 || 1.2.6 - 1.2.7 || ~1.2.8 || ^1.2.9 || 1.2.x"
 
 -- ** Satisfying constraints
--- | Although in general you should use 'satisfies', 'parseVersion', and
--- 'parseConstraint', doing that here makes it hard to tell what the examples
--- are doing. An operator makes things clearer.
+-- | Although in general you should use 'satisfiesConstraint', 'parseVersion',
+-- and 'parseConstraint', doing that here makes it hard to tell what the
+-- examples are doing. An operator makes things clearer.
 --
--- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint "=1.2.3"
+-- >>> satisfiesConstraint <$> parseVersion "1.2.3" <*> parseConstraint "=1.2.3"
 -- Just True
--- >>> let version ? constraint = satisfies (unsafeParseVersion version) (unsafeParseConstraint constraint)
+-- >>> let version ? constraint = satisfiesConstraint (unsafeParseVersion version) (unsafeParseConstraint constraint)
 -- >>> "1.2.3" ? "=1.2.3"
 -- True
 --

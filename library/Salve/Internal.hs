@@ -131,8 +131,8 @@ newtype Build = Build String deriving (Eq, Show)
 
 -- | Constrains allowable version numbers.
 --
--- Use 'parseConstraint' to create constraints and 'satisfies' to see if a
--- version number satisfies a constraint.
+-- Use 'parseConstraint' to create constraints and 'satisfiesConstraint' to see
+-- if a version number satisfiesConstraint a constraint.
 data Constraint
   = ConstraintOperator Operator Version
   | ConstraintHyphen Version Version
@@ -449,10 +449,10 @@ bumpPatch v = makeVersion
 
 -- | Returns 'True' if the version satisfies the constraint, 'False' otherwise.
 --
--- >>> satisfies <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
+-- >>> satisfiesConstraint <$> parseVersion "1.2.3" <*> parseConstraint ">1.2.0"
 -- Just True
-satisfies :: Version -> Constraint -> Bool
-satisfies v c = case c of
+satisfiesConstraint :: Version -> Constraint -> Bool
+satisfiesConstraint v c = case c of
   ConstraintOperator o w -> case o of
     OperatorLT -> v < w
     OperatorLE -> v <= w
@@ -473,8 +473,8 @@ satisfies v c = case c of
     WildcardMajor -> True
     WildcardMinor m -> (makeVersion m 0 0 [] [] <= v) && (v < makeVersion (m + 1) 0 0 [] [])
     WildcardPatch m n -> (makeVersion m n 0 [] [] <= v) && (v < makeVersion m (n + 1) 0 [] [])
-  ConstraintAnd l r -> satisfies v l && satisfies v r
-  ConstraintOr l r -> satisfies v l || satisfies v r
+  ConstraintAnd l r -> satisfiesConstraint v l && satisfiesConstraint v r
+  ConstraintOr l r -> satisfiesConstraint v l || satisfiesConstraint v r
 
 -- | Focuses on the major version number.
 --
