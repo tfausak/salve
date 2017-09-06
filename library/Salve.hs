@@ -30,7 +30,59 @@ module Salve (
 -- >>> satisfiesConstraint <$> parseConstraint ">1.2.0" <*> parseVersion "1.2.3"
 -- Just True
 
+-- * Cheat sheet
+-- | If you're coming from Cabal, you might not be familiar with npm's version
+-- range syntax. This table shows you how npm version ranges map to Cabal's
+-- version constraints.
+--
+-- > Salve           | Cabal              | Notes
+-- > -----           | -----              | -----
+-- > <1.2.3          | <1.2.3             | -
+-- > <=1.2.3         | <=1.2.3            | -
+-- > =1.2.3          | ==1.2.3            | equals sign is optional
+-- > >=1.2.3         | >=1.2.3            | -
+-- > >1.2.3          | >1.2.3             | -
+-- > 1.2.3 || >1.2.3 | ==1.2.3 || >1.2.3  | lower precedence than and
+-- > >=1.2.3 <2.0.0  | >=1.2.3 && <2.0.0  | higher precedence than or
+-- > 1.2.3 - 2.3.4   | >=1.2.3 && <=2.3.4 | inclusive ranges
+-- > 1.2.x           | ==1.2.*            | can use X or * instead of x
+-- > 1.x.x           | ==1.*              | -
+-- > x.x.x           | ==*                | same as -any
+-- > ~1.2.3          | ^>=1.2.3           | same as >=1.2.3 && <1.3.0
+-- > ^1.2.3          | >=1.2.3 && <2      | -
+-- > ^0.2.3          | >=0.2.3 && <0.3    | -
+-- > ^0.0.3          | >=0.0.3 && <0.0.4  | -
+
 -- * Rationale
+
+-- ** The PVP
+-- | Haskell's <https://pvp.haskell.org/ Package Versioning Policy> (PVP)
+-- defines three things:
+--
+-- 1.  A spec for versioning your package, which includes how version numbers
+--     look and how to encode breaking changes.
+-- 2.  A spec for constraining the versions of your dependencies, which
+--     incldues how version ranges look.
+-- 3.  A prescription for how to constrain the versions of your dependencies,
+--     which includes how the ranges of your dependencies should be.
+--
+-- By comparison, Semantic Versioning only deals with the first thing. npm's
+-- version ranges only deal with the second thing. This module deals with the
+-- first and second things but leaves the third up to you.
+--
+-- Looking at the first point, why might you want to use SemVer instead of the
+-- PVP? The PVP has many problems, as described by the
+-- <http://taylor.fausak.me/2016/12/28/problematic-versioning-policy/ Problematic versioning policy>
+-- blog post. In short, the PVP is too flexible and it's unique to Haskell,
+-- which causes unnecessary friction with developers from other languages.
+--
+-- Moving on to the second point, why should we use npm's version ranges
+-- instead of the PVP's? This is a less clear cut. The two syntaxes are broadly
+-- compatible. Really the only gains here are compatibility with a widely-used
+-- syntax and convenient shorthand for common constraints (like hyphens
+-- @1.2.3 - 2.3.4@, tildes @~1.2.3@, and carets @^1.2.3@).
+
+-- ** Other modules
 -- | There are already a few modules that provide version numbers. Why do we
 -- need another one? Let's take a look at the options.
 --
@@ -75,7 +127,7 @@ module Salve (
 --     -   Intentially allows weird versions.
 --     -   Does not support constraints.
 --
--- By comparison, Salve:
+-- By comparison, this module:
 --
 -- -   Does not expose constructors. Any version you create can be rendered and
 --     parsed without issue.
