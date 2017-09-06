@@ -452,29 +452,7 @@ bumpPatch v = makeVersion
 -- >>> satisfiesConstraint <$> parseConstraint ">1.2.0" <*> parseVersion "1.2.3"
 -- Just True
 satisfiesConstraint :: Constraint -> Version -> Bool
-satisfiesConstraint c v = case c of
-  ConstraintOperator o w -> case o of
-    OperatorLT -> v < w
-    OperatorLE -> v <= w
-    OperatorEQ -> compare v w == EQ
-    OperatorGE -> v >= w
-    OperatorGT -> v > w
-    OperatorTilde -> (v >= w) && (v < makeVersion (versionMajor w) (versionMinor w + 1) 0 [] [])
-    OperatorCaret ->
-      let u =
-            if versionMajor w == 0
-            then if versionMinor w == 0
-            then makeVersion (versionMajor w) (versionMinor w) (versionPatch w + 1) [] []
-            else makeVersion (versionMajor w) (versionMinor w + 1) 0 [] []
-            else makeVersion (versionMajor w + 1) 0 0 [] []
-      in (v >= w) && (v < u)
-  ConstraintHyphen l r -> (l <= v) && (v <= r)
-  ConstraintWildcard w -> case w of
-    WildcardMajor -> True
-    WildcardMinor m -> (makeVersion m 0 0 [] [] <= v) && (v < makeVersion (m + 1) 0 0 [] [])
-    WildcardPatch m n -> (makeVersion m n 0 [] [] <= v) && (v < makeVersion m (n + 1) 0 [] [])
-  ConstraintAnd l r -> satisfiesConstraint l v && satisfiesConstraint r v
-  ConstraintOr l r -> satisfiesConstraint l v || satisfiesConstraint r v
+satisfiesConstraint c v = satisfiesSC (toSC c) v
 
 -- | Focuses on the major version number.
 --
@@ -800,15 +778,6 @@ spaces1P = Monad.void (ReadP.munch1 (== ' '))
 spacesP :: ReadP.ReadP ()
 spacesP = Monad.void (ReadP.munch (== ' '))
 
--- *** Helpers
-
-parse :: ReadP.ReadP a -> String -> Maybe a
-parse p s =
-  let p' = ReadP.readP_to_S p
-  in Maybe.listToMaybe (do
-    (x, "") <- p' s
-    pure x)
-
 -- ** Rendering
 
 renderPreReleases :: [PreRelease] -> String
@@ -834,3 +803,66 @@ isIdentifier c = (Char.isAscii c && Char.isAlphaNum c) || (c == '-')
 
 isWildcard :: Char -> Bool
 isWildcard c = (c == 'x') || (c == '*') || (c == 'X')
+
+parse :: ReadP.ReadP a -> String -> Maybe a
+parse p s =
+  let p' = ReadP.readP_to_S p
+  in Maybe.listToMaybe (do
+    (x, "") <- p' s
+    pure x)
+
+-- * Simple constraints
+-- | Simple constraints are just as expressive as 'Constraint's, but they are
+-- easier to reason about. You can think of them as the desugared version of
+-- 'Constraint's.
+
+data SimpleConstraint
+  = SCLT Version
+  | SCEQ Version
+  | SCGT Version
+  | SCAnd SimpleConstraint SimpleConstraint
+  | SCOr SimpleConstraint SimpleConstraint
+  deriving (Eq, Show)
+
+mkV :: Word -> Word -> Word -> Version
+mkV m n p = makeVersion m n p [] []
+
+satisfiesSC :: SimpleConstraint -> Version -> Bool
+satisfiesSC c v = case c of
+  SCLT u -> v < u
+  -- This uses `compare` rather than `==` to ignore build metadata.
+  SCEQ u -> compare v u == EQ
+  SCGT u -> v > u
+  SCAnd l r -> satisfiesSC l v && satisfiesSC r v
+  SCOr l r -> satisfiesSC l v || satisfiesSC r v
+
+scLE :: Version -> SimpleConstraint
+scLE v = SCOr (SCLT v) (SCEQ v)
+
+scGE :: Version -> SimpleConstraint
+scGE v = SCOr (SCGT v) (SCEQ v)
+
+toSC :: Constraint -> SimpleConstraint
+toSC c = case c of
+  ConstraintOperator o v -> case o of
+    OperatorLT -> SCLT v
+    OperatorLE -> scLE v
+    OperatorEQ -> SCEQ v
+    OperatorGE -> scGE v
+    OperatorGT -> SCGT v
+    OperatorTilde -> SCAnd
+      (scGE v)
+      (SCLT (mkV (versionMajor v) (versionMinor v + 1) 0))
+    OperatorCaret -> SCAnd
+      (scGE v)
+      (SCLT (case (versionMajor v, versionMinor v, versionPatch v) of
+        (0, 0, p) -> mkV 0 0 (p + 1)
+        (0, n, _) -> mkV 0 (n + 1) 0
+        (m, _, _) -> mkV (m + 1) 0 0))
+  ConstraintHyphen l h -> SCAnd (scGE l) (scLE h)
+  ConstraintWildcard w -> case w of
+    WildcardMajor -> scGE initialVersion
+    WildcardMinor m -> SCAnd (scGE (mkV m 0 0)) (SCLT (mkV (m + 1) 0 0))
+    WildcardPatch m n -> SCAnd (scGE (mkV m n 0)) (SCLT (mkV m (n + 1) 0))
+  ConstraintAnd l r -> SCAnd (toSC l) (toSC r)
+  ConstraintOr l r -> SCOr (toSC l) (toSC r)
