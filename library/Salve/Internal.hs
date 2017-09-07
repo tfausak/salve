@@ -9,7 +9,6 @@ import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.Ord as Ord
 import qualified Text.ParserCombinators.ReadP as ReadP
-import qualified Text.Read as Read
 
 -- $setup
 -- >>> import Lens.Micro
@@ -668,7 +667,7 @@ buildP = do
   pure (Build b)
 
 numberP :: ReadP.ReadP Word
-numberP = nonZeroP ReadP.<++ zeroP
+numberP = zeroP ReadP.<++ nonZeroP
 
 zeroP :: ReadP.ReadP Word
 zeroP = do
@@ -679,9 +678,7 @@ nonZeroP :: ReadP.ReadP Word
 nonZeroP = do
   x <- ReadP.satisfy isAsciiDigitNonZero
   ys <- ReadP.munch Char.isDigit
-  case Read.readMaybe (x : ys) of
-    Nothing -> ReadP.pfail
-    Just n -> pure n
+  pure (stringToIntegral (x : ys))
 
 constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
@@ -810,6 +807,10 @@ parse p s =
   in Maybe.listToMaybe (do
     (x, "") <- p' s
     pure x)
+
+stringToIntegral :: Integral a => String -> a
+stringToIntegral s = foldl
+  (\ n d -> (n * 10) + (fromIntegral (fromEnum d) - 48)) 0 s
 
 -- * Simple constraints
 -- | Simple constraints are just as expressive as 'Constraint's, but they are
