@@ -163,8 +163,8 @@ makeVersion major minor patch preReleases builds = Version
 initialVersion :: Version
 initialVersion = makeVersion 0 0 0 [] []
 
--- | Attempts to parse a version. This parser follows [SemVer's
--- BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
+-- | Attempts to parse a version. This parser follows
+-- [SemVer's BNF](https://github.com/mojombo/semver/blob/eb9aac5/semver.md#backusnaur-form-grammar-for-valid-semver-versions).
 --
 -- >>> parseVersion "1.2.3-p.4+b.5"
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [PreReleaseTextual "p",PreReleaseNumeric 4], versionBuilds = [Build "b",Build "5"]})
@@ -219,8 +219,8 @@ parsePreRelease s = parse preReleaseP s
 parseBuild :: String -> Maybe Build
 parseBuild s = parse buildP s
 
--- | Attempts to parse a constraint. This parser mostly follows [npm's
--- BNF](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#range-grammar).
+-- | Attempts to parse a constraint. This parser mostly follows
+-- [npm's BNF](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#range-grammar).
 --
 -- >>> parseConstraint ">1.2.3"
 -- Just (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))

@@ -10,7 +10,7 @@ module Salve (
 --
 -- This module provides lenses for modifying versions. If you want to modify
 -- versions, consider importing a lens library like
--- <https://www.stackage.org/lts-9.3/package/microlens-0.4.8.1 microlens>.
+-- [microlens](https://www.stackage.org/lts-9.3/package/microlens-0.4.8.1).
 --
 -- The 'Version' data type is the core of this module. Use 'parseVersion' to
 -- make versions and 'renderVersion' to convert them into strings.
@@ -57,7 +57,8 @@ module Salve (
 -- * Rationale
 
 -- ** The PVP
--- | Haskell's <https://github.com/haskell/pvp/blob/176bb14/pvp-specification.md Package Versioning Policy>
+-- | Haskell's
+-- [Package Versioning Policy](https://github.com/haskell/pvp/blob/176bb14/pvp-specification.md)
 -- (PVP) defines three things:
 --
 -- 1.  A spec for versioning your package, which includes how version numbers
@@ -73,7 +74,7 @@ module Salve (
 --
 -- Looking at the first point, why might you want to use SemVer instead of the
 -- PVP? The PVP has many problems, as described by the
--- <http://taylor.fausak.me/2016/12/28/problematic-versioning-policy/ Problematic versioning policy>
+-- [Problematic versioning policy](http://taylor.fausak.me/2016/12/28/problematic-versioning-policy/)
 -- blog post. In short, the PVP is too flexible and it's unique to Haskell,
 -- which causes unnecessary friction with developers from other languages.
 --
@@ -87,7 +88,7 @@ module Salve (
 -- | There are already a few modules that provide version numbers. Why do we
 -- need another one? Let's take a look at the options.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/base-4.9.1.0/Data-Version.html Data.Version>
+-- -   [Data.Version](https://www.stackage.org/haddock/lts-9.3/base-4.9.1.0/Data-Version.html)
 --     from the @base@ package:
 --
 --     -   Exposes constructors, which allows creating versions that cannot be
@@ -97,7 +98,7 @@ module Salve (
 --     -   Does not support build metadata on versions.
 --     -   Does not support constraints.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/Cabal-1.24.2.0/Distribution-Version.html Distribution.Version>
+-- -   [Distribution.Version](https://www.stackage.org/haddock/lts-9.3/Cabal-1.24.2.0/Distribution-Version.html)
 --     from the @Cabal@ package:
 --
 --     -   Has the same problems as Data.Version because it re-uses that
@@ -106,13 +107,13 @@ module Salve (
 --         @deepseq@, @directory@, @filepath@, @pretty@, @process@, @time@, and
 --         @unix@ packages.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/semver-0.3.3.1/Data-SemVer.html Data.SemVer>
+-- -   [Data.SemVer](https://www.stackage.org/haddock/lts-9.3/semver-0.3.3.1/Data-SemVer.html)
 --     from the @semver@ package:
 --
 --     -   Depends on the @attoparsec@, @deepseq@, and @text@ packages.
 --     -   Does not support version constraints.
 --
--- -   <https://hackage.haskell.org/package/semver-range-0.2.2/docs/Data-SemVer.html Data.SemVer>
+-- -   [Data.SemVer](https://hackage.haskell.org/package/semver-range-0.2.2/docs/Data-SemVer.html)
 --     from the @semver-range@ package:
 --
 --     -   Depends on the @classy-prelude@, @parsec@, @text@, and
@@ -120,7 +121,7 @@ module Salve (
 --     -   Module name collides with the @semver@ package.
 --     -   Supports constraints, but does not provide a way to render them.
 --
--- -   <https://www.stackage.org/haddock/lts-9.3/versions-3.1.1/Data-Versions.html Data.Versions>
+-- -   [Data.Versions](https://www.stackage.org/haddock/lts-9.3/versions-3.1.1/Data-Versions.html)
 --     from the @versions@ package:
 --
 --     -   Depends on the @deepseq@, @hashable@, @megaparsec@, and @text@
