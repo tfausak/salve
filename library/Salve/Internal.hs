@@ -13,6 +13,7 @@ import qualified Data.Word as Word
 import qualified Text.ParserCombinators.ReadP as ReadP
 
 -- $setup
+-- >>> import Control.Applicative
 -- >>> import Lens.Micro
 -- >>> let view l x = x ^. l
 

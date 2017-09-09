@@ -577,3 +577,6 @@ buildsLens,
 ) where
 
 import Salve.Internal
+
+-- $setup
+-- >>> import Control.Applicative
