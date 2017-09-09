@@ -33,7 +33,7 @@ data Version = Version
   , versionBuilds :: [Build]
   } deriving (Eq, Show)
 
--- | In general, 'Version's compare in the way that you would expect. First the
+-- | In general, versions compare in the way that you would expect. First the
 -- major version numbers are compared, then the minors, then the patches.
 --
 -- >>> compare <$> parseVersion "1.2.3" <*> parseVersion "2.0.0"
@@ -131,7 +131,7 @@ newtype Build = Build String deriving (Eq, Show)
 -- | Constrains allowable version numbers.
 --
 -- Use 'parseConstraint' to create constraints and 'satisfiesConstraint' to see
--- if a version number satisfiesConstraint a constraint.
+-- if a version number satisfies a constraint.
 data Constraint
   = ConstraintOperator Operator Version
   | ConstraintHyphen Version Version
@@ -142,8 +142,8 @@ data Constraint
 
 -- | Makes a new version number.
 --
--- >>> makeVersion 0 0 0 [] []
--- Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []}
+-- >>> makeVersion 1 2 3 [unsafeParsePreRelease "pre"] [unsafeParseBuild "build"]
+-- Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [PreReleaseTextual "pre"], versionBuilds = [Build "build"]}
 --
 -- This can be a useful alternative to 'parseVersion' if you want a total way
 -- to create a version.
@@ -219,10 +219,8 @@ parsePreRelease s = parse preReleaseP s
 parseBuild :: String -> Maybe Build
 parseBuild s = parse buildP s
 
--- | Attempts to parse a constraint. This parser follows [npm's
--- BNF](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#range-grammar),
--- except that neither the so-called "x-ranges" nor partial version numbers are
--- not supported. So you cannot use @1.2.x@ or @>1.2@ as version constraints.
+-- | Attempts to parse a constraint. This parser mostly follows [npm's
+-- BNF](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#range-grammar).
 --
 -- >>> parseConstraint ">1.2.3"
 -- Just (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
@@ -230,6 +228,19 @@ parseBuild s = parse buildP s
 -- Returns 'Nothing' if the parse fails.
 --
 -- >>> parseConstraint "wrong"
+-- Nothing
+--
+-- The two departures from npm's BNF are that x-ranges cannot be used with
+-- other operators and partial version numbers are not allowed.
+--
+-- >>> parseConstraint "1.2.x"
+-- Just (ConstraintWildcard (WildcardPatch 1 2))
+-- >>> parseConstraint ">=1.2.x"
+-- Nothing
+--
+-- >>> parseConstraint "1.2"
+-- Nothing
+-- >>> parseConstraint ">=1.2"
 -- Nothing
 parseConstraint :: String -> Maybe Constraint
 parseConstraint s = parse constraintsP s
