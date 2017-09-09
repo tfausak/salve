@@ -12,7 +12,7 @@ import qualified Text.ParserCombinators.ReadP as ReadP
 
 -- $setup
 -- >>> import Lens.Micro
--- >>> import Lens.Micro.Extras
+-- >>> let view l x = x ^. l
 
 -- * Public
 
