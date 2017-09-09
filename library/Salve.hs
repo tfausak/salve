@@ -254,6 +254,27 @@ buildsLens,
 -- Nothing
 -- >>> parseVersion "0.0.0 "
 -- Nothing
+--
+-- Each version component cannot be larger than a 64-bit unsigned integer.
+--
+-- >>> parseVersion "18446744073709551615.0.0"
+-- Just (Version {versionMajor = 18446744073709551615, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})
+-- >>> parseVersion "18446744073709551616.0.0"
+-- Nothing
+--
+-- Numeric pre-releases tags cannot be larger than a 64-bit unsigned integer.
+--
+-- >>> parseVersion "0.0.0-18446744073709551615"
+-- Just (Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [PreReleaseNumeric 18446744073709551615], versionBuilds = []})
+-- >>> parseVersion "0.0.0-18446744073709551616"
+-- Nothing
+--
+-- Build metadata is not numeric so it does not have any limit.
+--
+-- >>> parseVersion "0.0.0+18446744073709551615"
+-- Just (Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = [Build "18446744073709551615"]})
+-- >>> parseVersion "0.0.0+18446744073709551616"
+-- Just (Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = [Build "18446744073709551616"]})
 
 -- ** Constraints
 -- | Partial version numbers are not allowed.

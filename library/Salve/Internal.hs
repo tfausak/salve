@@ -29,9 +29,9 @@ import qualified Text.ParserCombinators.ReadP as ReadP
 --
 -- Use 'parseVersion' to create versions.
 data Version = Version
-  { versionMajor :: Word.Word
-  , versionMinor :: Word.Word
-  , versionPatch :: Word.Word
+  { versionMajor :: Word.Word64
+  , versionMinor :: Word.Word64
+  , versionPatch :: Word.Word64
   , versionPreReleases :: [PreRelease]
   , versionBuilds :: [Build]
   } deriving (Eq, Show)
@@ -95,7 +95,7 @@ instance Ord Version where
 --
 -- Use 'parsePreRelease' to create pre-releases.
 data PreRelease
-  = PreReleaseNumeric Word.Word
+  = PreReleaseNumeric Word.Word64
   | PreReleaseTextual String
   deriving (Eq, Show)
 
@@ -150,7 +150,7 @@ data Constraint
 --
 -- This can be a useful alternative to 'parseVersion' if you want a total way
 -- to create a version.
-makeVersion :: Word.Word -> Word.Word -> Word.Word -> [PreRelease] -> [Build] -> Version
+makeVersion :: Word.Word64 -> Word.Word64 -> Word.Word64 -> [PreRelease] -> [Build] -> Version
 makeVersion major minor patch preReleases builds = Version
   { versionMajor = major
   , versionMinor = minor
@@ -473,7 +473,7 @@ satisfiesConstraint c v = satisfiesSC (toSC c) v
 -- Just 1
 -- >>> set majorLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 4, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-majorLens :: Functor f => (Word.Word -> f Word.Word) -> Version -> f Version
+majorLens :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
 majorLens f v = fmap
   (\ m -> v { versionMajor = m })
   (f (versionMajor v))
@@ -484,7 +484,7 @@ majorLens f v = fmap
 -- Just 2
 -- >>> set minorLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 1, versionMinor = 4, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-minorLens :: Functor f => (Word.Word -> f Word.Word) -> Version -> f Version
+minorLens :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
 minorLens f v = fmap
   (\ n -> v { versionMinor = n })
   (f (versionMinor v))
@@ -495,7 +495,7 @@ minorLens f v = fmap
 -- Just 3
 -- >>> set patchLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 4, versionPreReleases = [], versionBuilds = []})
-patchLens :: Functor f => (Word.Word -> f Word.Word) -> Version -> f Version
+patchLens :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
 patchLens f v = fmap
   (\ p -> v { versionPatch = p })
   (f (versionPatch v))
@@ -538,8 +538,8 @@ data Operator
 
 data Wildcard
   = WildcardMajor
-  | WildcardMinor Word.Word
-  | WildcardPatch Word.Word Word.Word
+  | WildcardMinor Word.Word64
+  | WildcardPatch Word.Word64 Word.Word64
   deriving (Eq, Show)
 
 -- ** Constructors
@@ -680,19 +680,21 @@ buildP = do
   b <- ReadP.munch1 isIdentifier
   return (Build b)
 
-numberP :: ReadP.ReadP Word.Word
+numberP :: ReadP.ReadP Word.Word64
 numberP = zeroP ReadP.<++ nonZeroP
 
-zeroP :: ReadP.ReadP Word.Word
+zeroP :: ReadP.ReadP Word.Word64
 zeroP = do
   Monad.void (ReadP.char '0')
   return 0
 
-nonZeroP :: ReadP.ReadP Word.Word
+nonZeroP :: ReadP.ReadP Word.Word64
 nonZeroP = do
   x <- ReadP.satisfy isAsciiDigitNonZero
   ys <- ReadP.munch Char.isDigit
-  return (stringToIntegral (x : ys))
+  case toWord64 (stringToIntegral (x : ys)) of
+    Nothing -> ReadP.pfail
+    Just n -> pure n
 
 constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
@@ -826,6 +828,14 @@ stringToIntegral :: Integral a => String -> a
 stringToIntegral s = foldl
   (\ n d -> (n * 10) + (fromIntegral (fromEnum d) - 48)) 0 s
 
+toWord64 :: Integer -> Maybe Word.Word64
+toWord64 n =
+  if n < 0
+  then Nothing
+  else if n > fromIntegral (maxBound :: Word.Word64)
+  then Nothing
+  else Just (fromIntegral n)
+
 -- * Simple constraints
 -- | Simple constraints are just as expressive as 'Constraint's, but they are
 -- easier to reason about. You can think of them as the desugared version of
@@ -839,7 +849,7 @@ data SimpleConstraint
   | SCOr SimpleConstraint SimpleConstraint
   deriving (Eq, Show)
 
-mkV :: Word.Word -> Word.Word -> Word.Word -> Version
+mkV :: Word.Word64 -> Word.Word64 -> Word.Word64 -> Version
 mkV m n p = makeVersion m n p [] []
 
 satisfiesSC :: SimpleConstraint -> Version -> Bool
