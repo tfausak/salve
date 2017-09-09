@@ -13,7 +13,7 @@ license: MIT
 maintainer: Taylor Fausak
 synopsis: Semantic version numbers and constraints.
 
-dependencies: base >=4.8.1 && <4.11
+dependencies: base >=4.7.0 && <4.11
 ghc-options: -Wall
 
 library:

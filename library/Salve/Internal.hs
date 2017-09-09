@@ -7,7 +7,9 @@ import qualified Control.Monad as Monad
 import qualified Data.Char as Char
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
+import qualified Data.Monoid as Monoid
 import qualified Data.Ord as Ord
+import qualified Data.Word as Word
 import qualified Text.ParserCombinators.ReadP as ReadP
 
 -- $setup
@@ -26,9 +28,9 @@ import qualified Text.ParserCombinators.ReadP as ReadP
 --
 -- Use 'parseVersion' to create versions.
 data Version = Version
-  { versionMajor :: Word
-  , versionMinor :: Word
-  , versionPatch :: Word
+  { versionMajor :: Word.Word
+  , versionMinor :: Word.Word
+  , versionPatch :: Word.Word
   , versionPreReleases :: [PreRelease]
   , versionBuilds :: [Build]
   } deriving (Eq, Show)
@@ -68,7 +70,7 @@ data Version = Version
 -- >>> (==) <$> parseVersion "1.2.3+a" <*> parseVersion "1.2.3+b"
 -- Just False
 instance Ord Version where
-  compare x y = mconcat
+  compare x y = Monoid.mconcat
     [ Ord.comparing versionMajor x y
     , Ord.comparing versionMinor x y
     , Ord.comparing versionPatch x y
@@ -92,7 +94,7 @@ instance Ord Version where
 --
 -- Use 'parsePreRelease' to create pre-releases.
 data PreRelease
-  = PreReleaseNumeric Word
+  = PreReleaseNumeric Word.Word
   | PreReleaseTextual String
   deriving (Eq, Show)
 
@@ -147,7 +149,7 @@ data Constraint
 --
 -- This can be a useful alternative to 'parseVersion' if you want a total way
 -- to create a version.
-makeVersion :: Word -> Word -> Word -> [PreRelease] -> [Build] -> Version
+makeVersion :: Word.Word -> Word.Word -> Word.Word -> [PreRelease] -> [Build] -> Version
 makeVersion major minor patch preReleases builds = Version
   { versionMajor = major
   , versionMinor = minor
@@ -318,7 +320,7 @@ unsafeParseConstraint s = case parseConstraint s of
 -- >>> renderVersion <$> parseVersion "1.2.3-p.4+b.5"
 -- Just "1.2.3-p.4+b.5"
 renderVersion :: Version -> String
-renderVersion v = mconcat
+renderVersion v = concat
   [ show (versionMajor v)
   , "."
   , show (versionMinor v)
@@ -470,7 +472,7 @@ satisfiesConstraint c v = satisfiesSC (toSC c) v
 -- Just 1
 -- >>> set majorLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 4, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-majorLens :: Functor f => (Word -> f Word) -> Version -> f Version
+majorLens :: Functor f => (Word.Word -> f Word.Word) -> Version -> f Version
 majorLens f v = fmap
   (\ m -> v { versionMajor = m })
   (f (versionMajor v))
@@ -481,7 +483,7 @@ majorLens f v = fmap
 -- Just 2
 -- >>> set minorLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 1, versionMinor = 4, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-minorLens :: Functor f => (Word -> f Word) -> Version -> f Version
+minorLens :: Functor f => (Word.Word -> f Word.Word) -> Version -> f Version
 minorLens f v = fmap
   (\ n -> v { versionMinor = n })
   (f (versionMinor v))
@@ -492,7 +494,7 @@ minorLens f v = fmap
 -- Just 3
 -- >>> set patchLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 4, versionPreReleases = [], versionBuilds = []})
-patchLens :: Functor f => (Word -> f Word) -> Version -> f Version
+patchLens :: Functor f => (Word.Word -> f Word.Word) -> Version -> f Version
 patchLens f v = fmap
   (\ p -> v { versionPatch = p })
   (f (versionPatch v))
@@ -535,8 +537,8 @@ data Operator
 
 data Wildcard
   = WildcardMajor
-  | WildcardMinor Word
-  | WildcardPatch Word Word
+  | WildcardMinor Word.Word
+  | WildcardPatch Word.Word Word.Word
   deriving (Eq, Show)
 
 -- ** Constructors
@@ -645,7 +647,7 @@ versionP = do
   patch <- numberP
   preReleases <- preReleasesP
   builds <- buildsP
-  pure (makeVersion major minor patch preReleases builds)
+  return (makeVersion major minor patch preReleases builds)
 
 preReleasesP :: ReadP.ReadP [PreRelease]
 preReleasesP = ReadP.option [] (do
@@ -658,14 +660,14 @@ preReleaseP = preReleaseNumberP ReadP.<++ preReleaseStringP
 preReleaseNumberP :: ReadP.ReadP PreRelease
 preReleaseNumberP = do
   n <- numberP
-  pure (PreReleaseNumeric n)
+  return (PreReleaseNumeric n)
 
 preReleaseStringP :: ReadP.ReadP PreRelease
 preReleaseStringP = do
   s <- ReadP.munch1 isIdentifier
   if all Char.isDigit s
     then ReadP.pfail
-    else pure (PreReleaseTextual s)
+    else return (PreReleaseTextual s)
 
 buildsP :: ReadP.ReadP [Build]
 buildsP = ReadP.option [] (do
@@ -675,40 +677,40 @@ buildsP = ReadP.option [] (do
 buildP :: ReadP.ReadP Build
 buildP = do
   b <- ReadP.munch1 isIdentifier
-  pure (Build b)
+  return (Build b)
 
-numberP :: ReadP.ReadP Word
+numberP :: ReadP.ReadP Word.Word
 numberP = zeroP ReadP.<++ nonZeroP
 
-zeroP :: ReadP.ReadP Word
+zeroP :: ReadP.ReadP Word.Word
 zeroP = do
   Monad.void (ReadP.char '0')
-  pure 0
+  return 0
 
-nonZeroP :: ReadP.ReadP Word
+nonZeroP :: ReadP.ReadP Word.Word
 nonZeroP = do
   x <- ReadP.satisfy isAsciiDigitNonZero
   ys <- ReadP.munch Char.isDigit
-  pure (stringToIntegral (x : ys))
+  return (stringToIntegral (x : ys))
 
 constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
   spacesP
   cs <- ReadP.sepBy1 constraintP orP
   spacesP
-  pure (foldr1 constraintOr cs)
+  return (foldr1 constraintOr cs)
 
 constraintP :: ReadP.ReadP Constraint
 constraintP = do
   cs <- ReadP.sepBy1 simpleP spaces1P
-  pure (foldr1 constraintAnd cs)
+  return (foldr1 constraintAnd cs)
 
 hyphenatedP :: ReadP.ReadP Constraint
 hyphenatedP = do
   v <- versionP
   hyphenP
   w <- versionP
-  pure (constraintHyphen v w)
+  return (constraintHyphen v w)
 
 simpleP :: ReadP.ReadP Constraint
 simpleP = ReadP.choice [hyphenatedP, wildcardConstraintP, primitiveP]
@@ -717,7 +719,7 @@ wildcardConstraintP :: ReadP.ReadP Constraint
 wildcardConstraintP = do
   ReadP.optional (ReadP.char '=')
   w <- wildcardP
-  pure (ConstraintWildcard w)
+  return (ConstraintWildcard w)
 
 wildcardP :: ReadP.ReadP Wildcard
 wildcardP = ReadP.choice [wildcardPatchP, wildcardMinorP, wildcardMajorP]
@@ -729,7 +731,7 @@ wildcardPatchP = do
   n <- numberP
   Monad.void (ReadP.char '.')
   Monad.void (ReadP.satisfy isWildcard)
-  pure (WildcardPatch m n)
+  return (WildcardPatch m n)
 
 wildcardMinorP :: ReadP.ReadP Wildcard
 wildcardMinorP = do
@@ -738,7 +740,7 @@ wildcardMinorP = do
   Monad.void (ReadP.satisfy isWildcard)
   Monad.void (ReadP.char '.')
   Monad.void (ReadP.satisfy isWildcard)
-  pure (WildcardMinor m)
+  return (WildcardMinor m)
 
 wildcardMajorP :: ReadP.ReadP Wildcard
 wildcardMajorP = do
@@ -747,25 +749,25 @@ wildcardMajorP = do
   Monad.void (ReadP.satisfy isWildcard)
   Monad.void (ReadP.char '.')
   Monad.void (ReadP.satisfy isWildcard)
-  pure WildcardMajor
+  return WildcardMajor
 
 primitiveP :: ReadP.ReadP Constraint
 primitiveP = do
   o <- operatorP
   spacesP
   v <- versionP
-  pure (ConstraintOperator o v)
+  return (ConstraintOperator o v)
 
 operatorP :: ReadP.ReadP Operator
 operatorP = ReadP.choice
-  [ ReadP.string "<=" *> pure OperatorLE
-  , ReadP.string ">=" *> pure OperatorGE
-  , ReadP.char '<' *> pure OperatorLT
-  , ReadP.char '>' *> pure OperatorGT
-  , ReadP.char '=' *> pure OperatorEQ
-  , ReadP.char '^' *> pure OperatorCaret
-  , ReadP.char '~' *> pure OperatorTilde
-  , pure OperatorEQ
+  [ ReadP.string "<=" >> return OperatorLE
+  , ReadP.string ">=" >> return OperatorGE
+  , ReadP.char '<' >> return OperatorLT
+  , ReadP.char '>' >> return OperatorGT
+  , ReadP.char '=' >> return OperatorEQ
+  , ReadP.char '^' >> return OperatorCaret
+  , ReadP.char '~' >> return OperatorTilde
+  , return OperatorEQ
   ]
 
 hyphenP :: ReadP.ReadP ()
@@ -817,7 +819,7 @@ parse p s =
   let p' = ReadP.readP_to_S p
   in Maybe.listToMaybe (do
     (x, "") <- p' s
-    pure x)
+    return x)
 
 stringToIntegral :: Integral a => String -> a
 stringToIntegral s = foldl
@@ -836,7 +838,7 @@ data SimpleConstraint
   | SCOr SimpleConstraint SimpleConstraint
   deriving (Eq, Show)
 
-mkV :: Word -> Word -> Word -> Version
+mkV :: Word.Word -> Word.Word -> Word.Word -> Version
 mkV m n p = makeVersion m n p [] []
 
 satisfiesSC :: SimpleConstraint -> Version -> Bool
