@@ -9,7 +9,8 @@ module Salve (
 -- >>> import Salve
 --
 -- This module provides lenses for modifying versions. If you want to modify
--- versions, consider importing a lens library like "Lens.Micro".
+-- versions, consider importing a lens library like
+-- <https://www.stackage.org/lts-9.3/package/microlens-0.4.8.1 microlens>.
 --
 -- The 'Version' data type is the core of this module. Use 'parseVersion' to
 -- make versions and 'renderVersion' to convert them into strings.
@@ -192,8 +193,7 @@ satisfiesConstraint,
 -- Don't be scared by these type signatures. They are provided in full to avoid
 -- the @RankNTypes@ language extension. The type signature
 -- @'Functor' f => (a -> f a) -> 'Version' -> f 'Version'@ is the same as
--- @'Lens.Micro.Lens'' 'Version' a@ (from "Lens.Micro"), which you may already
--- be familiar with.
+-- @Lens' 'Version' a@, which you may already be familiar with.
 majorLens,
 minorLens,
 patchLens,
