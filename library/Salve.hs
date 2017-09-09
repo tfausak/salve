@@ -1,7 +1,7 @@
 -- | This module defines types and functions for working with versions as
 -- defined by [Semantic Versioning](http://semver.org/spec/v2.0.0.html). It
 -- also provides types and functions for working with version constraints as
--- described by [npm](https://docs.npmjs.com/misc/semver#ranges).
+-- described by [npm](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#ranges).
 module Salve (
 -- | This module doesn't export anything that conflicts with the "Prelude", so
 -- you can import it unqualified.
@@ -57,8 +57,8 @@ module Salve (
 -- * Rationale
 
 -- ** The PVP
--- | Haskell's <https://pvp.haskell.org/ Package Versioning Policy> (PVP)
--- defines three things:
+-- | Haskell's <https://github.com/haskell/pvp/blob/176bb14/pvp-specification.md Package Versioning Policy>
+-- (PVP) defines three things:
 --
 -- 1.  A spec for versioning your package, which includes how version numbers
 --     look and how to encode breaking changes.
