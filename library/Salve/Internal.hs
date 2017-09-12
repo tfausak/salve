@@ -11,6 +11,7 @@ import qualified Data.Monoid as Monoid
 import qualified Data.Ord as Ord
 import qualified Data.Word as Word
 import qualified Text.ParserCombinators.ReadP as ReadP
+import qualified Data.Version
 
 -- $setup
 -- >>> import Control.Applicative
@@ -398,6 +399,15 @@ isUnstable v = versionMajor v == 0
 -- Just False
 isStable :: Version -> Bool
 isStable v = not (isUnstable v)
+
+convertFromBaseVersion :: Data.Version.Version -> Version
+convertFromBaseVersion (Data.Version.Version v _) = case v of
+    (m:i:p:_) -> go m i p
+    (m:i:_)   -> go m i 0
+    (m:_)     -> go m 0 0
+    _         -> go (0 ::Int) 0 0
+    where go :: Integral n => n -> n -> n -> Version
+          go m i p = makeVersion (fromIntegral m) (fromIntegral i) (fromIntegral p) [] []
 
 -- | Increments the major version number.
 --

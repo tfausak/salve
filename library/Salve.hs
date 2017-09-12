@@ -181,6 +181,9 @@ renderConstraint,
 isUnstable,
 isStable,
 
+-- * Conversions
+convertFromBaseVersion,
+
 -- * Helpers
 bumpMajor,
 bumpMinor,
