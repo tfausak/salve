@@ -400,14 +400,18 @@ isUnstable v = versionMajor v == 0
 isStable :: Version -> Bool
 isStable v = not (isUnstable v)
 
+-- | Convert from 'Data.Version'
+--
+-- >>> convertFromBaseVersion $ Data.Version.Version [1,2,3,4] []
+-- Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}
 convertFromBaseVersion :: Data.Version.Version -> Version
 convertFromBaseVersion (Data.Version.Version v _) = case v of
-    (m:i:p:_) -> go m i p
-    (m:i:_)   -> go m i 0
-    (m:_)     -> go m 0 0
-    _         -> go (0 ::Int) 0 0
-    where go :: Integral n => n -> n -> n -> Version
-          go m i p = makeVersion (fromIntegral m) (fromIntegral i) (fromIntegral p) [] []
+  (m:i:p:_) -> go m i p
+  (m:i:_)   -> go m i 0
+  (m:_)     -> go m 0 0
+  _         -> go (0 ::Int) 0 0
+  where go :: Integral n => n -> n -> n -> Version
+        go m i p = makeVersion (fromIntegral m) (fromIntegral i) (fromIntegral p) [] []
 
 -- | Increments the major version number.
 --
