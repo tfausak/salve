@@ -9,9 +9,9 @@ import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.Monoid as Monoid
 import qualified Data.Ord as Ord
+import qualified Data.Version as Version
 import qualified Data.Word as Word
 import qualified Text.ParserCombinators.ReadP as ReadP
-import qualified Data.Version
 
 -- $setup
 -- >>> import Control.Applicative
@@ -400,18 +400,35 @@ isUnstable v = versionMajor v == 0
 isStable :: Version -> Bool
 isStable v = not (isUnstable v)
 
--- | Convert from 'Data.Version'
+-- | Converts from a 'Data.Version.Version'.
 --
--- >>> convertFromBaseVersion $ Data.Version.Version [1,2,3,4] []
--- Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}
-convertFromBaseVersion :: Data.Version.Version -> Version
-convertFromBaseVersion (Data.Version.Version v _) = case v of
-  (m:i:p:_) -> go m i p
-  (m:i:_)   -> go m i 0
-  (m:_)     -> go m 0 0
-  _         -> go (0 ::Int) 0 0
-  where go :: Integral n => n -> n -> n -> Version
-        go m i p = makeVersion (fromIntegral m) (fromIntegral i) (fromIntegral p) [] []
+-- >>> renderVersion . fromBaseVersion $ Version.Version [1, 2, 3] []
+-- "1.2.3"
+--
+-- Missing version components are set to zero.
+--
+-- >>> renderVersion . fromBaseVersion $ Version.Version [] []
+-- "0.0.0"
+-- >>> renderVersion . fromBaseVersion $ Version.Version [1] []
+-- "1.0.0"
+-- >>> renderVersion . fromBaseVersion $ Version.Version [1, 2] []
+-- "1.2.0"
+--
+-- Extra version components are ignored.
+--
+-- >>> renderVersion . fromBaseVersion $ Version.Version [1, 2, 3, 4] []
+-- "1.2.3"
+--
+-- Tags are ignored.
+--
+-- >>> renderVersion . fromBaseVersion $ Version.Version [] ["ignored"]
+-- "0.0.0"
+fromBaseVersion :: Version.Version -> Version
+fromBaseVersion v = case Version.versionBranch v of
+  (m : n : p : _) -> mkV (fromIntegral m) (fromIntegral n) (fromIntegral p)
+  (m : n : _) -> mkV (fromIntegral m) (fromIntegral n) 0
+  (m : _) -> mkV (fromIntegral m) 0 0
+  _ -> mkV 0 0 0
 
 -- | Increments the major version number.
 --

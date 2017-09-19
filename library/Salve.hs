@@ -182,7 +182,7 @@ isUnstable,
 isStable,
 
 -- * Conversions
-convertFromBaseVersion,
+fromBaseVersion,
 
 -- * Helpers
 bumpMajor,
