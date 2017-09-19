@@ -400,23 +400,23 @@ isUnstable v = versionMajor v == 0
 isStable :: Version -> Bool
 isStable v = not (isUnstable v)
 
--- | Converts from a 'Data.Version.Version'.
+-- | Converts from a 'Version.Version' from the @base@ package.
 --
--- >>> renderVersion . fromBaseVersion $ Version.Version [1, 2, 3] []
+-- >>> renderVersion . fromBaseVersion $ Version.makeVersion [1, 2, 3]
 -- "1.2.3"
 --
 -- Missing version components are set to zero.
 --
--- >>> renderVersion . fromBaseVersion $ Version.Version [] []
+-- >>> renderVersion . fromBaseVersion $ Version.makeVersion []
 -- "0.0.0"
--- >>> renderVersion . fromBaseVersion $ Version.Version [1] []
+-- >>> renderVersion . fromBaseVersion $ Version.makeVersion [1]
 -- "1.0.0"
--- >>> renderVersion . fromBaseVersion $ Version.Version [1, 2] []
+-- >>> renderVersion . fromBaseVersion $ Version.makeVersion [1, 2]
 -- "1.2.0"
 --
 -- Extra version components are ignored.
 --
--- >>> renderVersion . fromBaseVersion $ Version.Version [1, 2, 3, 4] []
+-- >>> renderVersion . fromBaseVersion $ Version.makeVersion [1, 2, 3, 4]
 -- "1.2.3"
 --
 -- Tags are ignored.
@@ -429,6 +429,27 @@ fromBaseVersion v = case Version.versionBranch v of
   (m : n : _) -> mkV (fromIntegral m) (fromIntegral n) 0
   (m : _) -> mkV (fromIntegral m) 0 0
   _ -> mkV 0 0 0
+
+-- | Converts to a 'Version.Version' from the @base@ package.
+--
+-- >>> toBaseVersion <$> parseVersion "1.2.3"
+-- Just (Version {versionBranch = [1,2,3], versionTags = []})
+--
+-- Pre-releases and builds are converted to tags.
+--
+-- >>> toBaseVersion <$> parseVersion "1.2.3-pre+build"
+-- Just (Version {versionBranch = [1,2,3], versionTags = ["pre","build"]})
+toBaseVersion :: Version -> Version.Version
+toBaseVersion v = Version.Version
+  (map fromIntegral
+    [ versionMajor v
+    , versionMinor v
+    , versionPatch v
+    ])
+  (concat
+    [ map renderPreRelease (versionPreReleases v)
+    , map renderBuild (versionBuilds v)
+    ])
 
 -- | Increments the major version number.
 --

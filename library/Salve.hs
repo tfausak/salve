@@ -183,6 +183,7 @@ isStable,
 
 -- * Conversions
 fromBaseVersion,
+toBaseVersion,
 
 -- * Helpers
 bumpMajor,
