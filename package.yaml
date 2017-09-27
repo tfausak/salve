@@ -14,7 +14,7 @@ maintainer: Taylor Fausak
 synopsis: Semantic version numbers and constraints.
 
 dependencies:
-  - base >=4.7.0 && <4.11
+  - base >=4.8.2 && <4.11
 ghc-options:
   - -Wall
 
@@ -24,7 +24,7 @@ library:
 tests:
   doctest:
     dependencies:
-      - doctest >=0.9.11 && <0.14
+      - doctest >=0.11.2 && <0.14
     ghc-options:
       - -rtsopts
       - -threaded
