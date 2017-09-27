@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 -- | WARNING: This module should be considered private! If you find yourself
 -- wanting to import something from this module, please open an issue to get
 -- that thing exported from "Salve".
@@ -5,12 +8,14 @@ module Salve.Internal where
 
 import qualified Control.Monad as Monad
 import qualified Data.Char as Char
+import qualified Data.Data as Data
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.Monoid as Monoid
 import qualified Data.Ord as Ord
 import qualified Data.Version as Version
 import qualified Data.Word as Word
+import qualified GHC.Generics as Generics
 import qualified Text.ParserCombinators.ReadP as ReadP
 
 -- $setup
@@ -40,7 +45,7 @@ data Version = Version
   , versionPatch :: Word.Word64
   , versionPreReleases :: [PreRelease]
   , versionBuilds :: [Build]
-  } deriving (Eq, Show)
+  } deriving (Data.Data, Eq, Generics.Generic, Read, Show, Data.Typeable)
 
 -- | In general, versions compare in the way that you would expect. First the
 -- major version numbers are compared, then the minors, then the patches.
@@ -103,7 +108,7 @@ instance Ord Version where
 data PreRelease
   = PreReleaseNumeric Word.Word64
   | PreReleaseTextual String
-  deriving (Eq, Show)
+  deriving (Data.Data, Eq, Generics.Generic, Read, Show, Data.Typeable)
 
 -- | Numeric pre-releases are always less than textual pre-releases.
 --
@@ -135,7 +140,8 @@ instance Ord PreRelease where
 -- 3. Builds cannot be compared. That is, they do not have an 'Ord' instance.
 --
 -- Use 'parseBuild' to create builds.
-newtype Build = Build String deriving (Eq, Show)
+newtype Build = Build String
+  deriving (Data.Data, Eq, Generics.Generic, Read, Show, Data.Typeable)
 
 -- | Constrains allowable version numbers.
 --
@@ -147,7 +153,7 @@ data Constraint
   | ConstraintWildcard Wildcard
   | ConstraintAnd Constraint Constraint
   | ConstraintOr Constraint Constraint
-  deriving (Eq, Show)
+  deriving (Data.Data, Eq, Generics.Generic, Ord, Read, Show, Data.Typeable)
 
 -- | Makes a new version number.
 --
@@ -597,13 +603,13 @@ data Operator
   | OperatorGT
   | OperatorTilde
   | OperatorCaret
-  deriving (Eq, Show)
+  deriving (Data.Data, Eq, Generics.Generic, Ord, Read, Show, Data.Typeable)
 
 data Wildcard
   = WildcardMajor
   | WildcardMinor Word.Word64
   | WildcardPatch Word.Word64 Word.Word64
-  deriving (Eq, Show)
+  deriving (Data.Data, Eq, Generics.Generic, Ord, Read, Show, Data.Typeable)
 
 -- ** Constructors
 
@@ -910,7 +916,7 @@ data SimpleConstraint
   | SCGT Version
   | SCAnd SimpleConstraint SimpleConstraint
   | SCOr SimpleConstraint SimpleConstraint
-  deriving (Eq, Show)
+  deriving (Data.Data, Eq, Generics.Generic, Ord, Read, Show, Data.Typeable)
 
 mkV :: Word.Word64 -> Word.Word64 -> Word.Word64 -> Version
 mkV m n p = makeVersion m n p [] []
