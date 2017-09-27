@@ -31,10 +31,10 @@ before_install:
 
 install:
   - stack setup
-  - stack build --bench --only-dependencies --test
+  - stack build --only-dependencies --test
 
 script:
-  - stack build --bench --no-run-benchmarks --pedantic --test
+  - stack build --pedantic --test
   - stack sdist
 
 after_success:
