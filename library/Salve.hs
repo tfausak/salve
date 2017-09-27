@@ -248,15 +248,18 @@ buildsLens,
 -- >>> parseVersion "0.0.0.0"
 -- Nothing
 --
--- Spaces are not allowed.
+-- Spaces are allowed
 --
 -- >>> parseVersion " 0.0.0"
--- Nothing
+-- Just (Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})
+-- >>> parseVersion "0.0.0 "
+-- Just (Version {versionMajor = 0, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})
+--
+-- Interior spaces are not allowed.
+--
 -- >>> parseVersion "0 .0.0"
 -- Nothing
 -- >>> parseVersion "0. 0.0"
--- Nothing
--- >>> parseVersion "0.0.0 "
 -- Nothing
 --
 -- Each version component cannot be larger than a 64-bit unsigned integer.

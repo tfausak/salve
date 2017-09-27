@@ -183,12 +183,18 @@ initialVersion = makeVersion 0 0 0 [] []
 -- >>> parseVersion "wrong"
 -- Nothing
 --
--- Whitespace is not allowed and will cause the parser to fail.
+-- Whitespace is allowed.
 --
 -- >>> parseVersion " 1.2.3 "
--- Nothing
+-- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 parseVersion :: String -> Maybe Version
-parseVersion s = parse versionP s
+parseVersion s = parse
+  (do
+    ReadP.skipSpaces
+    version <- versionP
+    ReadP.skipSpaces
+    return version)
+  s
 
 -- | Attempts to parse a pre-release.
 --
@@ -751,7 +757,7 @@ nonZeroP = do
   ys <- ReadP.munch Char.isDigit
   case toWord64 (stringToIntegral (x : ys)) of
     Nothing -> ReadP.pfail
-    Just n -> pure n
+    Just n -> return n
 
 constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
