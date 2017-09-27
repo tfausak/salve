@@ -13,8 +13,10 @@ license: MIT
 maintainer: Taylor Fausak
 synopsis: Semantic version numbers and constraints.
 
-dependencies: base >=4.7.0 && <4.11
-ghc-options: -Wall
+dependencies:
+  - base >=4.7.0 && <4.11
+ghc-options:
+  - -Wall
 
 library:
   source-dirs: library
@@ -24,5 +26,8 @@ tests:
     dependencies:
       - doctest >=0.9.11 && <0.14
       - microlens >=0.2.0 && <0.5
-    main: doctest.hs
+    ghc-options:
+      - -rtsopts
+      - -threaded
+    main: Main.hs
     source-dirs: tests
