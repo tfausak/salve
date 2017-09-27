@@ -14,9 +14,14 @@ import qualified Data.Word as Word
 import qualified Text.ParserCombinators.ReadP as ReadP
 
 -- $setup
--- >>> import Control.Applicative
--- >>> import Lens.Micro
--- >>> let view l x = x ^. l
+--
+-- >>> import Control.Applicative (Const(..))
+-- >>> let view lens record = getConst (lens Const record)
+--
+-- >>> import Data.Functor.Identity (Identity(..))
+-- >>> let set lens field record = runIdentity (lens (const (Identity field)) record)
+--
+-- >>> import Control.Applicative ((<$>), (<*>))
 
 -- * Public
 
