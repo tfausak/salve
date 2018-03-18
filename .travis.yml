@@ -47,7 +47,7 @@ deploy:
     on: { tags: true }
     provider: releases
     api_key: { secure: c7Lrc/+Xd7k7pbW5Q9wpgU3t1l/QaLsRlTiTEZb4gCkxw5WjKuS5aGoOqtSgYIuWY0a3qtEJlssunZzc87B4a2JGeOiZSEW2eCmvI21sIoEycvYgoRF5vD+IzpPLykXU1ZX7wp6WOYD8j1Kj2CodbdA26o7zO5IXmkc+lGvB6Pk8rXSzElNm9TMEkZ75YikmUh6Xp35TvkMi89JjFhfwurP+LmcXia0lbPSL4pS7oVFWfoEVvM3qD/M87EBumVWsKnxlSvW0wZCc8CXzCBU1sLkBLrXaVCuh4BgYiquX2/TtuZ6dekc0P9cVzG0Mm+Itn/6PhLQYE1Zrc/STQKxtP4rmoH7mJUSV/3jfrDxFhvITempG/yGtqzDoJmefqwHULuL/Y4mt3DLgPxCh1XffnoMpbw9Erxi5iaR+xVq9Pv43AC8X14lC/KyQNLackmQilviSWPMboQXB8yOLKE1oEiuYnhCkKKc0h/0kKNX3qG+v684NmPftw8EHbWE5tGWzO/qRaIfA4h5xjORgkH+0+wUO0FFknMtNSXg8EM70geesByOzfotbzV467Hf5+02M26+uUrZXmhBygidOl1Xg1midMybKraHnAu2ocNxyLCvB03FYrkNeKvRWq/QJqMJknUlap5Flb1bY1hilaFbYZ16o5FcRSQbhFJjG4b+CDtg= }
-    file: salve.tgz
+    file: deploy/salve.tgz
   - skip_cleanup: true
     on: { tags: true }
     provider: script
