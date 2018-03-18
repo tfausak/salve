@@ -1,7 +1,7 @@
-import Test.DocTest
+import qualified Test.DocTest as Doctest
 
 main :: IO ()
-main = doctest
+main = Doctest.doctest
   [ "library/Salve/Internal.hs"
   , "library/Salve.hs"
   ]

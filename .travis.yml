@@ -1,47 +1,54 @@
+sudo: false
 language: generic
-
 addons:
   apt:
     packages:
       - libgmp-dev
-
 cache:
   directories:
     - $HOME/.local/bin
     - $HOME/.stack
-
 env:
   global:
     - HACKAGE_USERNAME=fozworth
-    # HACKAGE_PASSWORD
-    - secure: "b+FWpNs3z2WL8iuP4HprZZMtnbrLyd8dLEtj8H3bgc+g/pRYBSrKYn9xSU0pVPR3+iiell+IT/wirXrnCwVBq5V6/ruQz+h/yPtlvpyo8wP+nHxQAQIeFO6jd+G+JEwl4QA3cyBFDk75XbYrIMuxShTB7mJ4WDV5U+lxwDgdX0oP3kMLqhjAH7b5eWdUKly84+2YvfDnOV5CxixI3eq1nANHBH7YeWhJ1iwWrYkVAnMVUPJtTOoNv37hhqU2NrDdveijoFg3mm30QqsnFXqNyfbdcKjB8irlk/yu0gIwtjV0uKqWCtaW6qeozDV+2n1ijNzG4LuI8ZuYLCwG2HlvxjGm2AGWEte4RvPYPBfbvUXWqnSlTI2P5oRYIX6Y/9/DxjIkQE1OsC1FTe1uMdDn6KGyr64crUaSwu+WMZMnI7uW/ISKiuQq+u7MIZzZuP+4QVnS/bRI9OSKU6qs2jgaOZCZ5bI7bk3uJP95rXLlH++8EVxLA1YT6V1MSlvx5ZBtXVW4338mb4Agfy5W8hl7msL1PiDvQzzkNLFScyWsjT5UgWov1gIr89tWsPEtBL5J0gfUzETLfdbd+X5uTzr312LakN7qtdyyKdLZvEAZCEGGw86SCUbIVedajz5Bhsb+LM/i/vAomUIAjc5tSKJdPW2emR0KtfwR3t3KlhlOfkM="
-
+    - secure: b+FWpNs3z2WL8iuP4HprZZMtnbrLyd8dLEtj8H3bgc+g/pRYBSrKYn9xSU0pVPR3+iiell+IT/wirXrnCwVBq5V6/ruQz+h/yPtlvpyo8wP+nHxQAQIeFO6jd+G+JEwl4QA3cyBFDk75XbYrIMuxShTB7mJ4WDV5U+lxwDgdX0oP3kMLqhjAH7b5eWdUKly84+2YvfDnOV5CxixI3eq1nANHBH7YeWhJ1iwWrYkVAnMVUPJtTOoNv37hhqU2NrDdveijoFg3mm30QqsnFXqNyfbdcKjB8irlk/yu0gIwtjV0uKqWCtaW6qeozDV+2n1ijNzG4LuI8ZuYLCwG2HlvxjGm2AGWEte4RvPYPBfbvUXWqnSlTI2P5oRYIX6Y/9/DxjIkQE1OsC1FTe1uMdDn6KGyr64crUaSwu+WMZMnI7uW/ISKiuQq+u7MIZzZuP+4QVnS/bRI9OSKU6qs2jgaOZCZ5bI7bk3uJP95rXLlH++8EVxLA1YT6V1MSlvx5ZBtXVW4338mb4Agfy5W8hl7msL1PiDvQzzkNLFScyWsjT5UgWov1gIr89tWsPEtBL5J0gfUzETLfdbd+X5uTzr312LakN7qtdyyKdLZvEAZCEGGw86SCUbIVedajz5Bhsb+LM/i/vAomUIAjc5tSKJdPW2emR0KtfwR3t3KlhlOfkM=
 before_install:
   - |
-    if ! test -f "$HOME/.local/bin/stack"
+    if test ! -f "$HOME/.local/bin/stack"
     then
-      curl --location 'https://www.stackage.org/stack/linux-x86_64' > stack.tar.gz
+      VERSION=1.6.5
+      URL="https://github.com/commercialhaskell/stack/releases/download/v$VERSION/stack-$VERSION-$TRAVIS_OS_NAME-x86_64.tar.gz"
+      cd /tmp
+      curl --location "$URL" > stack.tar.gz
       gunzip stack.tar.gz
       tar --extract --file stack.tar --strip-components 1
       mkdir --parents "$HOME/.local/bin"
-      mv stack "$HOME/.local/bin/"
-      rm stack.tar
+      mv stack "$HOME/.local/bin"
+      cd -
     fi
-    stack --version
-
+  - stack --version
 install:
   - stack setup
   - stack build --only-dependencies --test
-
 script:
   - stack build --pedantic --test
   - stack sdist
-
 after_success:
-  - |
-    if test "$TRAVIS_TAG"
-    then
-      mkdir --parents "$HOME/.stack/upload"
-      echo "{ \"username\": \"$HACKAGE_USERNAME\", \"password\": \"$HACKAGE_PASSWORD\" }" > "$HOME/.stack/upload/credentials.json"
-      stack upload .
-    fi
+  - mkdir -p deploy
+  - cp -v "$(stack path --dist-dir)/salve-$TRAVIS_TAG.tar.gz" deploy/salve.tgz
+  - mkdir -p "$HOME/.stack/upload"
+  - >-
+    echo "{
+    \"username\": \"$HACKAGE_USERNAME\",
+    \"password\": \"$HACKAGE_PASSWORD\"
+    }" > "$HOME/.stack/upload/credentials.json"
+deploy:
+  - skip_cleanup: true
+    on: { tags: true }
+    provider: releases
+    api_key: { secure: c7Lrc/+Xd7k7pbW5Q9wpgU3t1l/QaLsRlTiTEZb4gCkxw5WjKuS5aGoOqtSgYIuWY0a3qtEJlssunZzc87B4a2JGeOiZSEW2eCmvI21sIoEycvYgoRF5vD+IzpPLykXU1ZX7wp6WOYD8j1Kj2CodbdA26o7zO5IXmkc+lGvB6Pk8rXSzElNm9TMEkZ75YikmUh6Xp35TvkMi89JjFhfwurP+LmcXia0lbPSL4pS7oVFWfoEVvM3qD/M87EBumVWsKnxlSvW0wZCc8CXzCBU1sLkBLrXaVCuh4BgYiquX2/TtuZ6dekc0P9cVzG0Mm+Itn/6PhLQYE1Zrc/STQKxtP4rmoH7mJUSV/3jfrDxFhvITempG/yGtqzDoJmefqwHULuL/Y4mt3DLgPxCh1XffnoMpbw9Erxi5iaR+xVq9Pv43AC8X14lC/KyQNLackmQilviSWPMboQXB8yOLKE1oEiuYnhCkKKc0h/0kKNX3qG+v684NmPftw8EHbWE5tGWzO/qRaIfA4h5xjORgkH+0+wUO0FFknMtNSXg8EM70geesByOzfotbzV467Hf5+02M26+uUrZXmhBygidOl1Xg1midMybKraHnAu2ocNxyLCvB03FYrkNeKvRWq/QJqMJknUlap5Flb1bY1hilaFbYZ16o5FcRSQbhFJjG4b+CDtg= }
+    file: salve.tgz
+  - skip_cleanup: true
+    on: { tags: true }
+    provider: script
+    script: stack upload .

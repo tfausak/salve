@@ -6,7 +6,9 @@ description:
   Salve provides semantic version (SemVer) numbers and constraints (ranges).
 extra-source-files:
   - CHANGELOG.markdown
+  - package.yaml
   - README.markdown
+  - stack.yaml
 github: tfausak/salve
 license-file: LICENSE.markdown
 license: MIT
@@ -14,9 +16,12 @@ maintainer: Taylor Fausak
 synopsis: Semantic version numbers and constraints.
 
 dependencies:
-  - base >=4.8.2 && <4.11
+  base: '>= 4.9.0 && < 4.12'
 ghc-options:
-  - -Wall
+  - -Weverything
+  - -Wno-implicit-prelude
+  - -Wno-safe
+  - -Wno-unsafe
 
 library:
   source-dirs: library
@@ -24,7 +29,7 @@ library:
 tests:
   doctest:
     dependencies:
-      - doctest >=0.11.2 && <0.14
+      doctest: '>= 0.11.0 && < 0.16'
     ghc-options:
       - -rtsopts
       - -threaded
