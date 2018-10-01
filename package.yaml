@@ -16,7 +16,7 @@ maintainer: Taylor Fausak
 synopsis: Semantic version numbers and constraints.
 
 dependencies:
-  base: '>= 4.9.0 && < 4.12'
+  base: '>= 4.9.0 && < 4.13'
 ghc-options:
   - -Weverything
   - -Wno-implicit-prelude
