@@ -1,49 +1,48 @@
-sudo: false
+os: linux
+dist: bionic
 language: generic
 addons:
   apt:
     packages:
       - libgmp-dev
+env:
+  global:
+    - HACKAGE_USERNAME=fozworth
+    # HACKAGE_PASSWORD
+    - secure: b+FWpNs3z2WL8iuP4HprZZMtnbrLyd8dLEtj8H3bgc+g/pRYBSrKYn9xSU0pVPR3+iiell+IT/wirXrnCwVBq5V6/ruQz+h/yPtlvpyo8wP+nHxQAQIeFO6jd+G+JEwl4QA3cyBFDk75XbYrIMuxShTB7mJ4WDV5U+lxwDgdX0oP3kMLqhjAH7b5eWdUKly84+2YvfDnOV5CxixI3eq1nANHBH7YeWhJ1iwWrYkVAnMVUPJtTOoNv37hhqU2NrDdveijoFg3mm30QqsnFXqNyfbdcKjB8irlk/yu0gIwtjV0uKqWCtaW6qeozDV+2n1ijNzG4LuI8ZuYLCwG2HlvxjGm2AGWEte4RvPYPBfbvUXWqnSlTI2P5oRYIX6Y/9/DxjIkQE1OsC1FTe1uMdDn6KGyr64crUaSwu+WMZMnI7uW/ISKiuQq+u7MIZzZuP+4QVnS/bRI9OSKU6qs2jgaOZCZ5bI7bk3uJP95rXLlH++8EVxLA1YT6V1MSlvx5ZBtXVW4338mb4Agfy5W8hl7msL1PiDvQzzkNLFScyWsjT5UgWov1gIr89tWsPEtBL5J0gfUzETLfdbd+X5uTzr312LakN7qtdyyKdLZvEAZCEGGw86SCUbIVedajz5Bhsb+LM/i/vAomUIAjc5tSKJdPW2emR0KtfwR3t3KlhlOfkM=
+
 cache:
   directories:
     - $HOME/.local/bin
     - $HOME/.stack
-env:
-  global:
-    - HACKAGE_USERNAME=fozworth
-    - secure: b+FWpNs3z2WL8iuP4HprZZMtnbrLyd8dLEtj8H3bgc+g/pRYBSrKYn9xSU0pVPR3+iiell+IT/wirXrnCwVBq5V6/ruQz+h/yPtlvpyo8wP+nHxQAQIeFO6jd+G+JEwl4QA3cyBFDk75XbYrIMuxShTB7mJ4WDV5U+lxwDgdX0oP3kMLqhjAH7b5eWdUKly84+2YvfDnOV5CxixI3eq1nANHBH7YeWhJ1iwWrYkVAnMVUPJtTOoNv37hhqU2NrDdveijoFg3mm30QqsnFXqNyfbdcKjB8irlk/yu0gIwtjV0uKqWCtaW6qeozDV+2n1ijNzG4LuI8ZuYLCwG2HlvxjGm2AGWEte4RvPYPBfbvUXWqnSlTI2P5oRYIX6Y/9/DxjIkQE1OsC1FTe1uMdDn6KGyr64crUaSwu+WMZMnI7uW/ISKiuQq+u7MIZzZuP+4QVnS/bRI9OSKU6qs2jgaOZCZ5bI7bk3uJP95rXLlH++8EVxLA1YT6V1MSlvx5ZBtXVW4338mb4Agfy5W8hl7msL1PiDvQzzkNLFScyWsjT5UgWov1gIr89tWsPEtBL5J0gfUzETLfdbd+X5uTzr312LakN7qtdyyKdLZvEAZCEGGw86SCUbIVedajz5Bhsb+LM/i/vAomUIAjc5tSKJdPW2emR0KtfwR3t3KlhlOfkM=
+
 before_install:
   - |
-    if test ! -f "$HOME/.local/bin/stack"
+    if ! test -f "$HOME/.local/bin/stack"
     then
-      VERSION=1.9.1
-      URL="https://github.com/commercialhaskell/stack/releases/download/v$VERSION/stack-$VERSION-$TRAVIS_OS_NAME-x86_64.tar.gz"
-      cd /tmp
-      curl --location "$URL" > stack.tar.gz
+      VERSION=2.3.0.1
+      URL="https://github.com/commercialhaskell/stack/releases/download/v$VERSION/stack-$VERSION-linux-x86_64-static.tar.gz"
+      curl --location --output stack.tar.gz "$URL"
       gunzip stack.tar.gz
       tar --extract --file stack.tar --strip-components 1
       mkdir --parents "$HOME/.local/bin"
       mv stack "$HOME/.local/bin"
-      cd -
+      rm stack.tar
     fi
   - stack --version
+
 install:
   - stack setup
   - stack build --only-dependencies --test
+
 script:
-  - stack build --pedantic --test
+  - stack build --no-run-tests --pedantic --test
+  - stack build --test
   - stack sdist
-after_success:
-  - mkdir -p deploy
-  - cp -v "$(stack path --dist-dir)/salve-$TRAVIS_TAG.tar.gz" deploy/salve.tgz
-  - mkdir -p "$HOME/.stack/upload"
-  - >-
-    echo "{
-    \"username\": \"$HACKAGE_USERNAME\",
-    \"password\": \"$HACKAGE_PASSWORD\"
-    }" > "$HOME/.stack/upload/credentials.json"
+
 deploy:
-  - skip_cleanup: true
-    on: { tags: true }
-    provider: script
-    script: stack upload --no-signature .
+  provider: script
+  on:
+    tags: true
+  skip_cleanup: true
+  script: yes | stack upload .
