@@ -48,7 +48,7 @@ library
     Salve.Internal
   hs-source-dirs: src/lib
 
-test-suite doctest
+test-suite test
   import: basics
 
   build-depends:
