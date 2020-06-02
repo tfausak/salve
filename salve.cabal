@@ -1,7 +1,7 @@
 cabal-version: 2.2
 
 name: salve
-version: 1.0.9
+version: 1.0.10
 
 synopsis: Semantic version numbers and constraints.
 description:
