@@ -1,5 +1,6 @@
 # Salve
-[![Travis CI](https://travis-ci.org/tfausak/salve.svg?branch=master)](https://travis-ci.org/tfausak/salve)
+
+[![CI](https://github.com/tfausak/salve/workflows/CI/badge.svg)](https://github.com/tfausak/salve/actions/new)
 [![Hackage](https://img.shields.io/hackage/v/salve)](https://hackage.haskell.org/package/salve)
 [![Stackage](https://www.stackage.org/package/salve/badge/nightly?label=stackage)](https://www.stackage.org/package/salve)
 
