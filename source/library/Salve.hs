@@ -2,7 +2,8 @@
 -- defined by [Semantic Versioning](http://semver.org/spec/v2.0.0.html). It
 -- also provides types and functions for working with version constraints as
 -- described by [npm](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#ranges).
-module Salve (
+module Salve
+  (
 -- | This module doesn't export anything that conflicts with the "Prelude", so
 -- you can import it unqualified.
 --
@@ -147,49 +148,57 @@ module Salve (
 --     extension simply to deal with version numbers.
 
 -- * Types
-Salve.Version,
-Salve.PreRelease,
-Salve.Build,
-Salve.Constraint,
+    Salve.Version
+  , Salve.PreRelease
+  , Salve.Build
+  , Salve.Constraint
+  ,
 
 -- * Constructors
-Salve.makeVersion,
-Salve.initialVersion,
+    Salve.makeVersion
+  , Salve.initialVersion
+  ,
 
 -- * Parsing
-Salve.parseVersion,
-Salve.parsePreRelease,
-Salve.parseBuild,
-Salve.parseConstraint,
+    Salve.parseVersion
+  , Salve.parsePreRelease
+  , Salve.parseBuild
+  , Salve.parseConstraint
+  ,
 
 -- ** Unsafe
 -- | These functions can be used to unsafely parse strings. Instead of
 -- returning 'Nothing', they raise an exception. Only use these if you are sure
 -- the string can be successfully parsed!
-Salve.unsafeParseVersion,
-Salve.unsafeParsePreRelease,
-Salve.unsafeParseBuild,
-Salve.unsafeParseConstraint,
+    Salve.unsafeParseVersion
+  , Salve.unsafeParsePreRelease
+  , Salve.unsafeParseBuild
+  , Salve.unsafeParseConstraint
+  ,
 
 -- * Rendering
-Salve.renderVersion,
-Salve.renderPreRelease,
-Salve.renderBuild,
-Salve.renderConstraint,
+    Salve.renderVersion
+  , Salve.renderPreRelease
+  , Salve.renderBuild
+  , Salve.renderConstraint
+  ,
 
 -- * Predicates
-Salve.isUnstable,
-Salve.isStable,
+    Salve.isUnstable
+  , Salve.isStable
+  ,
 
 -- * Conversions
-Salve.fromBaseVersion,
-Salve.toBaseVersion,
+    Salve.fromBaseVersion
+  , Salve.toBaseVersion
+  ,
 
 -- * Helpers
-Salve.bumpMajor,
-Salve.bumpMinor,
-Salve.bumpPatch,
-Salve.satisfiesConstraint,
+    Salve.bumpMajor
+  , Salve.bumpMinor
+  , Salve.bumpPatch
+  , Salve.satisfiesConstraint
+  ,
 
 -- * Lenses
 -- | These lenses can be used to access and modify specific parts of a
@@ -199,11 +208,11 @@ Salve.satisfiesConstraint,
 -- the @RankNTypes@ language extension. The type signature
 -- @'Functor' f => (a -> f a) -> 'Version' -> f 'Version'@ is the same as
 -- @Lens' 'Version' a@, which you may already be familiar with.
-Salve.majorLens,
-Salve.minorLens,
-Salve.patchLens,
-Salve.preReleasesLens,
-Salve.buildsLens,
+    Salve.majorLens
+  , Salve.minorLens
+  , Salve.patchLens
+  , Salve.preReleasesLens
+  , Salve.buildsLens
 
 -- * Examples
 -- | These examples are provided to showcase functionality and explain weird
@@ -602,7 +611,7 @@ Salve.buildsLens,
 --     True
 --     >>> "2.0.0" ? "x.x.x"
 --     True
-) where
+  ) where
 
 import qualified Salve.Internal as Salve
 
