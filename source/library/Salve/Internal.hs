@@ -89,7 +89,8 @@ data Version = Version
   , versionPatch :: Word.Word64
   , versionPreReleases :: [PreRelease]
   , versionBuilds :: [Build]
-  } deriving (Data.Data, Eq, Generics.Generic, Read, Show)
+  }
+  deriving (Data.Data, Eq, Generics.Generic, Read, Show)
 
 -- | In general, versions compare in the way that you would expect. First the
 -- major version numbers are compared, then the minors, then the patches.
@@ -206,7 +207,13 @@ data Constraint
 --
 -- This can be a useful alternative to 'parseVersion' if you want a total way
 -- to create a version.
-makeVersion :: Word.Word64 -> Word.Word64 -> Word.Word64 -> [PreRelease] -> [Build] -> Version
+makeVersion
+  :: Word.Word64
+  -> Word.Word64
+  -> Word.Word64
+  -> [PreRelease]
+  -> [Build]
+  -> Version
 makeVersion major minor patch preReleases builds = Version
   { versionMajor = major
   , versionMinor = minor
@@ -238,13 +245,13 @@ initialVersion = makeVersion 0 0 0 [] []
 -- >>> parseVersion " 1.2.3 "
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 parseVersion :: String -> Maybe Version
-parseVersion s = parse
+parseVersion = parse
   (do
     ReadP.skipSpaces
     version <- versionP
     ReadP.skipSpaces
-    return version)
-  s
+    return version
+  )
 
 -- | Attempts to parse a pre-release.
 --
@@ -263,7 +270,7 @@ parseVersion s = parse
 -- >>> parsePreRelease "01"
 -- Nothing
 parsePreRelease :: String -> Maybe PreRelease
-parsePreRelease s = parse preReleaseP s
+parsePreRelease = parse preReleaseP
 
 -- | Attempts to parse a build.
 --
@@ -282,7 +289,7 @@ parsePreRelease s = parse preReleaseP s
 -- >>> parseBuild "01"
 -- Just (Build "01")
 parseBuild :: String -> Maybe Build
-parseBuild s = parse buildP s
+parseBuild = parse buildP
 
 -- | Attempts to parse a constraint. This parser mostly follows
 -- [npm's BNF](https://github.com/npm/npm/blob/d081cc6/doc/misc/semver.md#range-grammar).
@@ -308,7 +315,7 @@ parseBuild s = parse buildP s
 -- >>> parseConstraint ">=1.2"
 -- Nothing
 parseConstraint :: String -> Maybe Constraint
-parseConstraint s = parse constraintsP s
+parseConstraint = parse constraintsP
 
 -- | Parses a version.
 --
@@ -324,7 +331,7 @@ parseConstraint s = parse constraintsP s
 -- See 'parseVersion' for a safe version of this function.
 unsafeParseVersion :: String -> Version
 unsafeParseVersion s = case parseVersion s of
-  Nothing -> error ("unsafeParseVersion: invalid version: " ++ show s)
+  Nothing -> error ("unsafeParseVersion: invalid version: " <> show s)
   Just v -> v
 
 -- | Parses a pre-release.
@@ -341,7 +348,7 @@ unsafeParseVersion s = case parseVersion s of
 -- See 'parsePreRelease' for a safe version of this function.
 unsafeParsePreRelease :: String -> PreRelease
 unsafeParsePreRelease s = case parsePreRelease s of
-  Nothing -> error ("unsafeParsePreRelease: invalid pre-release: " ++ show s)
+  Nothing -> error ("unsafeParsePreRelease: invalid pre-release: " <> show s)
   Just p -> p
 
 -- | Parses a build.
@@ -358,7 +365,7 @@ unsafeParsePreRelease s = case parsePreRelease s of
 -- See 'parseBuild' for a safe version of this function.
 unsafeParseBuild :: String -> Build
 unsafeParseBuild s = case parseBuild s of
-  Nothing -> error ("unsafeParseBuild: invalid build: " ++ show s)
+  Nothing -> error ("unsafeParseBuild: invalid build: " <> show s)
   Just b -> b
 
 -- | Parses a constraint.
@@ -375,7 +382,7 @@ unsafeParseBuild s = case parseBuild s of
 -- See 'parseConstraint' for a safe version of this function.
 unsafeParseConstraint :: String -> Constraint
 unsafeParseConstraint s = case parseConstraint s of
-  Nothing -> error ("unsafeParseConstraint: invalid constraint: " ++ show s)
+  Nothing -> error ("unsafeParseConstraint: invalid constraint: " <> show s)
   Just c -> c
 
 -- | Renders a version.
@@ -427,20 +434,21 @@ renderConstraint :: Constraint -> String
 renderConstraint c = case c of
   ConstraintOperator o v ->
     let s = renderVersion v
-    in case o of
-      OperatorLT -> '<' : s
-      OperatorLE -> '<' : '=' : s
-      OperatorEQ -> s
-      OperatorGE -> '>' : '=' : s
-      OperatorGT -> '>' : s
-      OperatorTilde -> '~' : s
-      OperatorCaret -> '^' : s
+    in
+      case o of
+        OperatorLT -> '<' : s
+        OperatorLE -> '<' : '=' : s
+        OperatorEQ -> s
+        OperatorGE -> '>' : '=' : s
+        OperatorGT -> '>' : s
+        OperatorTilde -> '~' : s
+        OperatorCaret -> '^' : s
   ConstraintHyphen l r -> unwords [renderVersion l, "-", renderVersion r]
   ConstraintWildcard w -> case w of
     WildcardMajor -> "x.x.x"
-    WildcardMinor m -> show m ++ ".x.x"
+    WildcardMinor m -> show m <> ".x.x"
     WildcardPatch m n -> List.intercalate "." [show m, show n, "x"]
-  ConstraintAnd l r -> unwords (map renderConstraint [l, r])
+  ConstraintAnd l r -> unwords (fmap renderConstraint [l, r])
   ConstraintOr l r -> unwords [renderConstraint l, "||", renderConstraint r]
 
 -- | Returns 'True' if the major version number is zero, 'False' otherwise.
@@ -502,15 +510,12 @@ fromBaseVersion v = case Version.versionBranch v of
 -- Just (Version {versionBranch = [1,2,3], versionTags = ["pre","build"]})
 toBaseVersion :: Version -> Version.Version
 toBaseVersion v = Version.Version
-  (map fromIntegral
-    [ versionMajor v
-    , versionMinor v
-    , versionPatch v
-    ])
-  (concat
-    [ map renderPreRelease (versionPreReleases v)
-    , map renderBuild (versionBuilds v)
-    ])
+  (fmap fromIntegral [versionMajor v, versionMinor v, versionPatch v])
+  (mconcat
+    [ fmap renderPreRelease (versionPreReleases v)
+    , fmap renderBuild (versionBuilds v)
+    ]
+  )
 
 -- | Increments the major version number.
 --
@@ -570,15 +575,15 @@ bumpMinor v = makeVersion (versionMajor v) (versionMinor v + 1) 0 [] []
 -- Consider using 'patchLens' if you want to arbitrarily change the patch
 -- number, or if you don't want the other parts of the version to change.
 bumpPatch :: Version -> Version
-bumpPatch v = makeVersion
-  (versionMajor v) (versionMinor v) (versionPatch v + 1) [] []
+bumpPatch v =
+  makeVersion (versionMajor v) (versionMinor v) (versionPatch v + 1) [] []
 
 -- | Returns 'True' if the version satisfies the constraint, 'False' otherwise.
 --
 -- >>> satisfiesConstraint <$> parseConstraint ">1.2.0" <*> parseVersion "1.2.3"
 -- Just True
 satisfiesConstraint :: Constraint -> Version -> Bool
-satisfiesConstraint c v = satisfiesSC (toSC c) v
+satisfiesConstraint c = satisfiesSC (toSC c)
 
 -- | Focuses on the major version number.
 --
@@ -586,10 +591,9 @@ satisfiesConstraint c v = satisfiesSC (toSC c) v
 -- Just 1
 -- >>> set majorLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 4, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-majorLens :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
-majorLens f v = fmap
-  (\ m -> v { versionMajor = m })
-  (f (versionMajor v))
+majorLens
+  :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
+majorLens f v = fmap (\m -> v { versionMajor = m }) (f (versionMajor v))
 
 -- | Focuses on the minor version number.
 --
@@ -597,10 +601,9 @@ majorLens f v = fmap
 -- Just 2
 -- >>> set minorLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 1, versionMinor = 4, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-minorLens :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
-minorLens f v = fmap
-  (\ n -> v { versionMinor = n })
-  (f (versionMinor v))
+minorLens
+  :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
+minorLens f v = fmap (\n -> v { versionMinor = n }) (f (versionMinor v))
 
 -- | Focuses on the patch version number.
 --
@@ -608,10 +611,9 @@ minorLens f v = fmap
 -- Just 3
 -- >>> set patchLens 4 <$> parseVersion "1.2.3"
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 4, versionPreReleases = [], versionBuilds = []})
-patchLens :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
-patchLens f v = fmap
-  (\ p -> v { versionPatch = p })
-  (f (versionPatch v))
+patchLens
+  :: Functor f => (Word.Word64 -> f Word.Word64) -> Version -> f Version
+patchLens f v = fmap (\p -> v { versionPatch = p }) (f (versionPatch v))
 
 -- | Focuses on the pre-release identifiers.
 --
@@ -619,10 +621,10 @@ patchLens f v = fmap
 -- Just [PreReleaseTextual "pre",PreReleaseNumeric 4]
 -- >>> set preReleasesLens [] <$> parseVersion "1.2.3-pre"
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
-preReleasesLens :: Functor f => ([PreRelease] -> f [PreRelease]) -> Version -> f Version
-preReleasesLens f v = fmap
-  (\ ps -> v { versionPreReleases = ps })
-  (f (versionPreReleases v))
+preReleasesLens
+  :: Functor f => ([PreRelease] -> f [PreRelease]) -> Version -> f Version
+preReleasesLens f v =
+  fmap (\ps -> v { versionPreReleases = ps }) (f (versionPreReleases v))
 
 -- | Focuses on the build metadata.
 --
@@ -631,9 +633,7 @@ preReleasesLens f v = fmap
 -- >>> set buildsLens [] <$> parseVersion "1.2.3+build"
 -- Just (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})
 buildsLens :: Functor f => ([Build] -> f [Build]) -> Version -> f Version
-buildsLens f v = fmap
-  (\ bs -> v { versionBuilds = bs })
-  (f (versionBuilds v))
+buildsLens f v = fmap (\bs -> v { versionBuilds = bs }) (f (versionBuilds v))
 
 -- * Private
 
@@ -664,7 +664,7 @@ data Wildcard
 -- >>> parseConstraint "<1.2.3"
 -- Just (ConstraintOperator OperatorLT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintLT :: Version -> Constraint
-constraintLT v = ConstraintOperator OperatorLT v
+constraintLT = ConstraintOperator OperatorLT
 
 -- | Makes a new constraint that must be less than or euqal to the version
 -- number.
@@ -674,7 +674,7 @@ constraintLT v = ConstraintOperator OperatorLT v
 -- >>> parseConstraint "<=1.2.3"
 -- Just (ConstraintOperator OperatorLE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintLE :: Version -> Constraint
-constraintLE v = ConstraintOperator OperatorLE v
+constraintLE = ConstraintOperator OperatorLE
 
 -- | Makes a new constraint that must be equal to the version number.
 --
@@ -683,7 +683,7 @@ constraintLE v = ConstraintOperator OperatorLE v
 -- >>> parseConstraint "=1.2.3"
 -- Just (ConstraintOperator OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintEQ :: Version -> Constraint
-constraintEQ v = ConstraintOperator OperatorEQ v
+constraintEQ = ConstraintOperator OperatorEQ
 
 -- | Makes a new constraint that must be greater than or equal to the version
 -- number.
@@ -693,7 +693,7 @@ constraintEQ v = ConstraintOperator OperatorEQ v
 -- >>> parseConstraint ">=1.2.3"
 -- Just (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintGE :: Version -> Constraint
-constraintGE v = ConstraintOperator OperatorGE v
+constraintGE = ConstraintOperator OperatorGE
 
 -- | Makes a new constraint that must be greater than the version number.
 --
@@ -702,7 +702,7 @@ constraintGE v = ConstraintOperator OperatorGE v
 -- >>> parseConstraint ">1.2.3"
 -- Just (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintGT :: Version -> Constraint
-constraintGT v = ConstraintOperator OperatorGT v
+constraintGT = ConstraintOperator OperatorGT
 
 -- | Makes a new constraint that must satisfy both constraints.
 --
@@ -711,7 +711,7 @@ constraintGT v = ConstraintOperator OperatorGT v
 -- >>> parseConstraint ">=1.2.3 <2.0.0"
 -- Just (ConstraintAnd (ConstraintOperator OperatorGE (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorLT (Version {versionMajor = 2, versionMinor = 0, versionPatch = 0, versionPreReleases = [], versionBuilds = []})))
 constraintAnd :: Constraint -> Constraint -> Constraint
-constraintAnd l r = ConstraintAnd l r
+constraintAnd = ConstraintAnd
 
 -- | Makes a new constraint that must satisfy either constraint.
 --
@@ -720,7 +720,7 @@ constraintAnd l r = ConstraintAnd l r
 -- >>> parseConstraint "=1.2.3 || >1.2.3"
 -- Just (ConstraintOr (ConstraintOperator OperatorEQ (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})) (ConstraintOperator OperatorGT (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []})))
 constraintOr :: Constraint -> Constraint -> Constraint
-constraintOr l r = ConstraintOr l r
+constraintOr = ConstraintOr
 
 -- | Makes a new constraint that must be between the versions, inclusive.
 --
@@ -729,7 +729,7 @@ constraintOr l r = ConstraintOr l r
 -- >>> parseConstraint "1.2.3 - 2.3.4"
 -- Just (ConstraintHyphen (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}) (Version {versionMajor = 2, versionMinor = 3, versionPatch = 4, versionPreReleases = [], versionBuilds = []}))
 constraintHyphen :: Version -> Version -> Constraint
-constraintHyphen v w = ConstraintHyphen v w
+constraintHyphen = ConstraintHyphen
 
 -- | Makes a new constraint that allows changes to the patch version number.
 --
@@ -738,7 +738,7 @@ constraintHyphen v w = ConstraintHyphen v w
 -- >>> parseConstraint "~1.2.3"
 -- Just (ConstraintOperator OperatorTilde (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintTilde :: Version -> Constraint
-constraintTilde v = ConstraintOperator OperatorTilde v
+constraintTilde = ConstraintOperator OperatorTilde
 
 -- | Makes a new constraint that allows changes that do not modify the
 -- left-most non-zero version number.
@@ -748,7 +748,7 @@ constraintTilde v = ConstraintOperator OperatorTilde v
 -- >>> parseConstraint "^1.2.3"
 -- Just (ConstraintOperator OperatorCaret (Version {versionMajor = 1, versionMinor = 2, versionPatch = 3, versionPreReleases = [], versionBuilds = []}))
 constraintCaret :: Version -> Constraint
-constraintCaret v = ConstraintOperator OperatorCaret v
+constraintCaret = ConstraintOperator OperatorCaret
 
 -- ** Parsing
 
@@ -760,33 +760,34 @@ versionP = do
   Monad.void (ReadP.char '.')
   patch <- numberP
   preReleases <- preReleasesP
-  builds <- buildsP
-  return (makeVersion major minor patch preReleases builds)
+  makeVersion major minor patch preReleases <$> buildsP
 
 preReleasesP :: ReadP.ReadP [PreRelease]
-preReleasesP = ReadP.option [] (do
-  Monad.void (ReadP.char '-')
-  ReadP.sepBy1 preReleaseP (ReadP.char '.'))
+preReleasesP = ReadP.option
+  []
+  (do
+    Monad.void (ReadP.char '-')
+    ReadP.sepBy1 preReleaseP (ReadP.char '.')
+  )
 
 preReleaseP :: ReadP.ReadP PreRelease
 preReleaseP = preReleaseNumberP ReadP.<++ preReleaseStringP
 
 preReleaseNumberP :: ReadP.ReadP PreRelease
-preReleaseNumberP = do
-  n <- numberP
-  return (PreReleaseNumeric n)
+preReleaseNumberP = PreReleaseNumeric <$> numberP
 
 preReleaseStringP :: ReadP.ReadP PreRelease
 preReleaseStringP = do
   s <- ReadP.munch1 isIdentifier
-  if all Char.isDigit s
-    then ReadP.pfail
-    else return (PreReleaseTextual s)
+  if all Char.isDigit s then ReadP.pfail else return (PreReleaseTextual s)
 
 buildsP :: ReadP.ReadP [Build]
-buildsP = ReadP.option [] (do
-  Monad.void (ReadP.char '+')
-  ReadP.sepBy1 buildP (ReadP.char '.'))
+buildsP = ReadP.option
+  []
+  (do
+    Monad.void (ReadP.char '+')
+    ReadP.sepBy1 buildP (ReadP.char '.')
+  )
 
 buildP :: ReadP.ReadP Build
 buildP = do
@@ -805,9 +806,7 @@ nonZeroP :: ReadP.ReadP Word.Word64
 nonZeroP = do
   x <- ReadP.satisfy isAsciiDigitNonZero
   ys <- ReadP.munch Char.isDigit
-  case toWord64 (stringToIntegral (x : ys)) of
-    Nothing -> ReadP.pfail
-    Just n -> return n
+  maybe ReadP.pfail pure . toWord64 . stringToIntegral $ x : ys
 
 constraintsP :: ReadP.ReadP Constraint
 constraintsP = do
@@ -825,8 +824,7 @@ hyphenatedP :: ReadP.ReadP Constraint
 hyphenatedP = do
   v <- versionP
   hyphenP
-  w <- versionP
-  return (constraintHyphen v w)
+  constraintHyphen v <$> versionP
 
 simpleP :: ReadP.ReadP Constraint
 simpleP = ReadP.choice [hyphenatedP, wildcardConstraintP, primitiveP]
@@ -834,8 +832,7 @@ simpleP = ReadP.choice [hyphenatedP, wildcardConstraintP, primitiveP]
 wildcardConstraintP :: ReadP.ReadP Constraint
 wildcardConstraintP = do
   ReadP.optional (ReadP.char '=')
-  w <- wildcardP
-  return (ConstraintWildcard w)
+  ConstraintWildcard <$> wildcardP
 
 wildcardP :: ReadP.ReadP Wildcard
 wildcardP = ReadP.choice [wildcardPatchP, wildcardMinorP, wildcardMajorP]
@@ -871,8 +868,7 @@ primitiveP :: ReadP.ReadP Constraint
 primitiveP = do
   o <- operatorP
   spacesP
-  v <- versionP
-  return (ConstraintOperator o v)
+  ConstraintOperator o <$> versionP
 
 operatorP :: ReadP.ReadP Operator
 operatorP = ReadP.choice
@@ -907,14 +903,12 @@ spacesP = Monad.void (ReadP.munch (== ' '))
 -- ** Rendering
 
 renderPreReleases :: [PreRelease] -> String
-renderPreReleases ps = if null ps
-  then ""
-  else '-' : List.intercalate "." (map renderPreRelease ps)
+renderPreReleases ps =
+  if null ps then "" else '-' : List.intercalate "." (fmap renderPreRelease ps)
 
 renderBuilds :: [Build] -> String
-renderBuilds bs = if null bs
-  then ""
-  else '+' : List.intercalate "." (map renderBuild bs)
+renderBuilds bs =
+  if null bs then "" else '+' : List.intercalate "." (fmap renderBuild bs)
 
 -- ** Helpers
 
@@ -933,21 +927,22 @@ isWildcard c = (c == 'x') || (c == '*') || (c == 'X')
 parse :: ReadP.ReadP a -> String -> Maybe a
 parse p s =
   let p' = ReadP.readP_to_S p
-  in Maybe.listToMaybe (do
-    (x, "") <- p' s
-    return x)
+  in
+    Maybe.listToMaybe
+      (do
+        (x, "") <- p' s
+        return x
+      )
 
 stringToIntegral :: Integral a => String -> a
-stringToIntegral s = foldl
-  (\ n d -> (n * 10) + (fromIntegral (fromEnum d) - 48)) 0 s
+stringToIntegral =
+  foldl (\n d -> (n * 10) + (fromIntegral (fromEnum d) - 48)) 0
 
 toWord64 :: Integer -> Maybe Word.Word64
-toWord64 n =
-  if n < 0
-  then Nothing
-  else if n > fromIntegral (maxBound :: Word.Word64)
-  then Nothing
-  else Just (fromIntegral n)
+toWord64 n
+  | n < 0 = Nothing
+  | n > fromIntegral (maxBound :: Word.Word64) = Nothing
+  | otherwise = Just (fromIntegral n)
 
 -- * Simple constraints
 -- | Simple constraints are just as expressive as 'Constraint's, but they are
@@ -965,6 +960,7 @@ data SimpleConstraint
 mkV :: Word.Word64 -> Word.Word64 -> Word.Word64 -> Version
 mkV m n p = makeVersion m n p [] []
 
+{- hlint ignore satisfiesSC "Redundant compare" -}
 satisfiesSC :: SimpleConstraint -> Version -> Bool
 satisfiesSC c v = case c of
   SCLT u -> v < u
@@ -988,15 +984,17 @@ toSC c = case c of
     OperatorEQ -> SCEQ v
     OperatorGE -> scGE v
     OperatorGT -> SCGT v
-    OperatorTilde -> SCAnd
-      (scGE v)
-      (SCLT (mkV (versionMajor v) (versionMinor v + 1) 0))
+    OperatorTilde ->
+      SCAnd (scGE v) (SCLT (mkV (versionMajor v) (versionMinor v + 1) 0))
     OperatorCaret -> SCAnd
       (scGE v)
-      (SCLT (case (versionMajor v, versionMinor v, versionPatch v) of
-        (0, 0, p) -> mkV 0 0 (p + 1)
-        (0, n, _) -> mkV 0 (n + 1) 0
-        (m, _, _) -> mkV (m + 1) 0 0))
+      (SCLT
+        (case (versionMajor v, versionMinor v, versionPatch v) of
+          (0, 0, p) -> mkV 0 0 (p + 1)
+          (0, n, _) -> mkV 0 (n + 1) 0
+          (m, _, _) -> mkV (m + 1) 0 0
+        )
+      )
   ConstraintHyphen l h -> SCAnd (scGE l) (scLE h)
   ConstraintWildcard w -> case w of
     WildcardMajor -> scGE initialVersion
