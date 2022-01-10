@@ -1,7 +1,4 @@
 # Change log
 
-Salve uses [Semantic Versioning][].
-The change log is available through the [releases on GitHub][].
-
-[Semantic Versioning]: http://semver.org/spec/v2.0.0.html
-[releases on GitHub]: https://github.com/tfausak/salve/releases
+Salve follows the [Package Versioning Policy](https://pvp.haskell.org).
+You can find release notes [on GitHub](https://github.com/tfausak/salve/releases).
