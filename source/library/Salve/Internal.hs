@@ -254,7 +254,7 @@ parseVersion =
         ReadP.skipSpaces
         version <- versionP
         ReadP.skipSpaces
-        return version
+        pure version
     )
 
 -- | Attempts to parse a pre-release.
@@ -785,7 +785,7 @@ preReleaseNumberP = PreReleaseNumeric <$> numberP
 preReleaseStringP :: ReadP.ReadP PreRelease
 preReleaseStringP = do
   s <- ReadP.munch1 isIdentifier
-  if all Char.isDigit s then ReadP.pfail else return (PreReleaseTextual s)
+  if all Char.isDigit s then ReadP.pfail else pure (PreReleaseTextual s)
 
 buildsP :: ReadP.ReadP [Build]
 buildsP =
@@ -799,7 +799,7 @@ buildsP =
 buildP :: ReadP.ReadP Build
 buildP = do
   b <- ReadP.munch1 isIdentifier
-  return (Build b)
+  pure (Build b)
 
 numberP :: ReadP.ReadP Word.Word64
 numberP = zeroP ReadP.<++ nonZeroP
@@ -807,7 +807,7 @@ numberP = zeroP ReadP.<++ nonZeroP
 zeroP :: ReadP.ReadP Word.Word64
 zeroP = do
   Monad.void (ReadP.char '0')
-  return 0
+  pure 0
 
 nonZeroP :: ReadP.ReadP Word.Word64
 nonZeroP = do
@@ -820,12 +820,12 @@ constraintsP = do
   spacesP
   cs <- ReadP.sepBy1 constraintP orP
   spacesP
-  return (foldr1 constraintOr cs)
+  pure (foldr1 constraintOr cs)
 
 constraintP :: ReadP.ReadP Constraint
 constraintP = do
   cs <- ReadP.sepBy1 simpleP spaces1P
-  return (foldr1 constraintAnd cs)
+  pure (foldr1 constraintAnd cs)
 
 hyphenatedP :: ReadP.ReadP Constraint
 hyphenatedP = do
@@ -851,7 +851,7 @@ wildcardPatchP = do
   n <- numberP
   Monad.void (ReadP.char '.')
   Monad.void (ReadP.satisfy isWildcard)
-  return (WildcardPatch m n)
+  pure (WildcardPatch m n)
 
 wildcardMinorP :: ReadP.ReadP Wildcard
 wildcardMinorP = do
@@ -860,7 +860,7 @@ wildcardMinorP = do
   Monad.void (ReadP.satisfy isWildcard)
   Monad.void (ReadP.char '.')
   Monad.void (ReadP.satisfy isWildcard)
-  return (WildcardMinor m)
+  pure (WildcardMinor m)
 
 wildcardMajorP :: ReadP.ReadP Wildcard
 wildcardMajorP = do
@@ -869,7 +869,7 @@ wildcardMajorP = do
   Monad.void (ReadP.satisfy isWildcard)
   Monad.void (ReadP.char '.')
   Monad.void (ReadP.satisfy isWildcard)
-  return WildcardMajor
+  pure WildcardMajor
 
 primitiveP :: ReadP.ReadP Constraint
 primitiveP = do
@@ -880,14 +880,14 @@ primitiveP = do
 operatorP :: ReadP.ReadP Operator
 operatorP =
   ReadP.choice
-    [ ReadP.string "<=" >> return OperatorLE,
-      ReadP.string ">=" >> return OperatorGE,
-      ReadP.char '<' >> return OperatorLT,
-      ReadP.char '>' >> return OperatorGT,
-      ReadP.char '=' >> return OperatorEQ,
-      ReadP.char '^' >> return OperatorCaret,
-      ReadP.char '~' >> return OperatorTilde,
-      return OperatorEQ
+    [ ReadP.string "<=" >> pure OperatorLE,
+      ReadP.string ">=" >> pure OperatorGE,
+      ReadP.char '<' >> pure OperatorLT,
+      ReadP.char '>' >> pure OperatorGT,
+      ReadP.char '=' >> pure OperatorEQ,
+      ReadP.char '^' >> pure OperatorCaret,
+      ReadP.char '~' >> pure OperatorTilde,
+      pure OperatorEQ
     ]
 
 hyphenP :: ReadP.ReadP ()
@@ -938,7 +938,7 @@ parse p s =
    in Maybe.listToMaybe
         ( do
             (x, "") <- p' s
-            return x
+            pure x
         )
 
 stringToIntegral :: (Integral a) => String -> a
