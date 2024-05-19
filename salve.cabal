@@ -1,16 +1,17 @@
 cabal-version: 2.2
-
 name: salve
 version: 2.0.0.4
-
 synopsis: Semantic version numbers and constraints.
 description:
   Salve provides semantic version (SemVer) numbers and constraints (ranges).
 
 build-type: Simple
 category: Distribution
-extra-source-files: CHANGELOG.markdown README.markdown
-license-file: LICENSE.markdown
+extra-doc-files:
+  CHANGELOG.md
+  README.md
+
+license-file: LICENSE.txt
 license: MIT
 maintainer: Taylor Fausak
 
@@ -20,12 +21,10 @@ source-repository head
 
 flag pedantic
   default: False
-  description: Enables @-Werror@, which turns warnings into errors.
   manual: True
 
 common library
-  build-depends:
-    , base >= 4.16.0 && < 4.20
+  build-depends: base ^>=4.18.0.0 || ^>=4.19.0.0 || ^>=4.20.0.0
   default-language: Haskell2010
   ghc-options:
     -Weverything
@@ -43,7 +42,6 @@ common library
 
 common executable
   import: library
-
   build-depends: salve
   ghc-options:
     -rtsopts
@@ -52,17 +50,18 @@ common executable
 
 library
   import: library
-
+  -- cabal-gild: discover source/library
   exposed-modules:
     Salve
     Salve.Internal
+
   hs-source-dirs: source/library
 
 test-suite salve-test-suite
   import: executable
-
   build-depends:
-    , HUnit >= 1.6.1 && < 1.7
+    HUnit ^>=1.6.2.0
+
   hs-source-dirs: source/test-suite
   main-is: Main.hs
   type: exitcode-stdio-1.0
